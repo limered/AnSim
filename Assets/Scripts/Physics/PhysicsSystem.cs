@@ -11,6 +11,9 @@ namespace Assets.Scripts.Physics
     /// </summary>
     class PhysicsSystem
     {
-        public void IntegratePhysics(float dt, GameObject[] cubes) { }
+        public void IntegratePhysics(float dt, List<GameObject> cubes)
+        {
+
+        }
     }
 }

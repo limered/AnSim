@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using UnityEngine;
 
 namespace Assets.Scripts.Collisions
 {
@@ -7,7 +8,7 @@ namespace Assets.Scripts.Collisions
     /// </summary>
     internal class CollisionSystem
     {
-        public void CalculateCollisions(float dt, GameObject[] cubes)
+        public void CalculateCollisions(float dt, List<GameObject> cubes)
         {
         }
     }

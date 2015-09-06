@@ -22,7 +22,7 @@ namespace Assets.Scripts.Physics
         public float inertiaTensor { get; private set; }        // Inertia Tensor of object (We use only cubes in physics sim, so only one value)
         public float inverseInertiaTensor { get; private set; }
 
-        State(Vector3 startPosition, Quaternion startOriantation, float mass, float inertiaTensor) {
+        public State(Vector3 startPosition, Quaternion startOriantation, float mass, float inertiaTensor) {
             position = startPosition;
             orientation = startOriantation;
             this.mass = mass;

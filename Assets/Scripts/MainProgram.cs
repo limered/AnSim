@@ -1,6 +1,7 @@
 ﻿using Assets.Scripts.Collisions;
 using Assets.Scripts.Physics;
 using Assets.Scripts.Renderer;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Assets.Scripts
@@ -12,9 +13,11 @@ namespace Assets.Scripts
         public GameObject SmallCubePrefab;
         public GameObject[] Walls;
 
+        static public float GravityConstant = -9.8f;
+
         private float _accumulator = 0;
         private CollisionSystem _collisions = new CollisionSystem();
-        private GameObject[] _cubes;
+        private List<GameObject> _cubes = new List<GameObject>();
         private PhysicsSystem _physics = new PhysicsSystem();
         private RenderingSystem _rendering = new RenderingSystem();
         private float _timeStep = 0.02f;
@@ -22,10 +25,41 @@ namespace Assets.Scripts
         // Use this for initialization
         private void Start()
         {
-            var player = Instantiate(BigCubePrefab, new Vector3(10, 5, 10), Quaternion.identity);
+            InstantiateSmallCubes(-20, 20, 4);
+            AddWallsToInstancesList();
         }
 
-        // Update is called once per frame
+        /// <summary>
+        /// Instantiates all small cubes.
+        /// </summary>
+        /// <param name="min">Minimal position (x and z)</param>
+        /// <param name="max">Maximal position (x and z)</param>
+        /// <param name="stepSize">Sets the desity of small cubes on the ground ((max - min) / step * (max - min) / step, ie: (20 + 20) / 4 * (20 + 20) / 4 = 100 Würfel)</param>
+        private void InstantiateSmallCubes(int min, int max, int stepSize)
+        {
+            for (int i = min; i <= max; i += stepSize)
+            {
+                for (int j = min; j <= max; j += stepSize)
+                {
+                    _cubes.Add((GameObject)Instantiate(SmallCubePrefab, new Vector3(i, 1, j), Quaternion.identity));
+                }
+            }
+        }
+
+        /// <summary>
+        /// Adds all the Wall object to list of instances
+        /// </summary>
+        private void AddWallsToInstancesList()
+        {
+            for (int i = 0; i < Walls.Length; i++)
+            {
+                _cubes.Add(Walls[i]);
+            }
+        }
+
+        /// <summary>
+        /// Main update method for simulation.
+        /// </summary>
         private void Update()
         {
             var dt = Time.deltaTime;
@@ -42,6 +76,8 @@ namespace Assets.Scripts
 
             var alpha = _accumulator / _timeStep;
             _rendering.Interpolate(alpha, _cubes);
+
+            //Eventuell die Kamera hier bewegen um den würfel zu verfolgen? TODO
         }
     }
 }

@@ -8,7 +8,7 @@ namespace Assets.Scripts.Collisions
     /// <summary>
     /// (Cube Collider) Generates positions of vertices from a state object and saves them for colision calculation.
     /// </summary>
-    class AnSimCollider
+    public class AnSimCollider
     {
     }
 }

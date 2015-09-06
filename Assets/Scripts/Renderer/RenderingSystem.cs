@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using UnityEngine;
 
 namespace Assets.Scripts.Renderer
 {
@@ -7,7 +8,7 @@ namespace Assets.Scripts.Renderer
     /// </summary>
     internal class RenderingSystem
     {
-        public void Interpolate(float alpha, GameObject[] cubes)
+        public void Interpolate(float alpha, List<GameObject> cubes)
         {
         }
     }
