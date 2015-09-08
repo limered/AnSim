@@ -27,6 +27,7 @@ namespace Assets.Scripts
         {
             InstantiateSmallCubes(-20, 20, 4);
             AddWallsToInstancesList();
+
         }
 
         /// <summary>
@@ -75,7 +76,7 @@ namespace Assets.Scripts
             }
 
             var alpha = _accumulator / _timeStep;
-            _rendering.Interpolate(alpha, _cubes);
+            _rendering.LateUpdate(alpha, _cubes);
 
             //Eventuell die Kamera hier bewegen um den würfel zu verfolgen? TODO
         }
