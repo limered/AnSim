@@ -11,7 +11,7 @@ namespace Assets.Scripts
     public abstract class ObjectController : MonoBehaviour
     {
 
-        public AnSimCollider anSimCollider;
+        public OrientedBox3D anSimCollider;
         public State lastState;
         public State nextState;
 
@@ -32,7 +32,8 @@ namespace Assets.Scripts
             var transform = GetComponent<Transform>();
             lastState = new State(transform.position, transform.rotation, Mass, 0f); //TODO Inertia Tensor aus Größe/Scale berechnen
             nextState = lastState.Clone();
-            anSimCollider = new AnSimCollider();    //TODO input Werte definieren (evtl. State?)
+            anSimCollider = new OrientedBox3D();
+            anSimCollider.UpdateDataFromObject(gameObject);
 
             CollisionForce = new Vector3();
             CollisionTorque = new Vector3();

@@ -13,7 +13,7 @@ namespace Assets.Scripts.Physics
         public Quaternion orientation { get; set; }             // Current Orientation of Physics Object
         public Vector3 angularMomentum { get; set; }            // Current angular momentum
 
-        public Vector3 velocity { get; private set; }           // Calculated velocity of object (m/s)
+        public Vector3 velocity { get; set; }           // Calculated velocity of object (m/s)
         public Quaternion spin { get; private set; }            // Quaternion rate of change in orientation.
         public Vector3 angularVelocity { get; private set; }    // Velocity of Angular change
 

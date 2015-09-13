@@ -25,9 +25,9 @@ namespace Assets.Scripts
         // Use this for initialization
         private void Start()
         {
-            InstantiateSmallCubes(-20, 20, 4);
-            AddWallsToInstancesList();
-
+            InstantiateSmallCubes(-20, 20, 2);
+            //AddWallsToInstancesList();
+            _AddPlayer();
         }
 
         /// <summary>
@@ -42,7 +42,10 @@ namespace Assets.Scripts
             {
                 for (int j = min; j <= max; j += stepSize)
                 {
-                    _cubes.Add((GameObject)Instantiate(SmallCubePrefab, new Vector3(i, 1, j), Quaternion.identity));
+                    var smallCube = (GameObject)Instantiate(SmallCubePrefab, new Vector3(i, 1, j), Quaternion.identity);//Quaternion.AngleAxis(Random.Range(0, 90), new Vector3(0.5f, 0.5f, 0)));
+                    //smallCube.GetComponent<ObjectController>().anSimCollider.UpdateDataFromObject(smallCube);
+                    _cubes.Add(smallCube);
+
                 }
             }
         }
@@ -54,8 +57,23 @@ namespace Assets.Scripts
         {
             for (int i = 0; i < Walls.Length; i++)
             {
-                _cubes.Add(Walls[i]);
+                //Walls[i].GetComponent<ObjectController>().anSimCollider.UpdateDataFromObject(Walls[i]);
+                //_cubes.Add(Walls[i]);
             }
+        }
+
+        private void _AddPlayer()
+        {
+            var playerCube = GameObject.Find("BigCube");
+            //playerCube.GetComponent<ObjectController>().lastState.velocity = new Vector3(5, 0, 0);
+            //playerCube.GetComponent<ObjectController>().nextState.velocity = new Vector3(5, 0, 0);
+            _cubes.Add(playerCube);
+
+            //var smallCube = GameObject.Find("SmallCube");
+            //smallCube.GetComponent<ObjectController>().lastState.velocity = new Vector3(5, 0, 0);
+            //smallCube.GetComponent<ObjectController>().nextState.velocity = new Vector3(5, 0, 0);
+            //_cubes.Add(smallCube);
+
         }
 
         /// <summary>
