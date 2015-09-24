@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using Assets.Scripts.Physics;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Assets.Scripts.Collisions
@@ -8,149 +9,273 @@ namespace Assets.Scripts.Collisions
     /// </summary>
     internal class CollisionSystem
     {
-        private float _epsilon = 0.001f;
-        private float _parallelCutof;
+        public static float friction = 0f;
+        public static float bounce = 10f;
+
+        public static float overlapElasticity = 0.2f;
+
         private CollisionInfo coll = new CollisionInfo();
 
-        internal struct CollisionInfo
-        {
-            public OrientedBox3D A;
-            public OrientedBox3D B;
-
-            public Vector3 relativePos;
-            public Vector3 relativePosRot;
-            public Vector3 relativeVel;
-
-            public float[,] R, AbsR;
-            public float ra, rb;
-
-            public float r_min;
-            public Vector3 n_min;
-            public Vector3 normal_c;
-            public bool invert_normal;
-            public int code;
-            public int tested_axis_0;
-            public int tested_axis_1;
-
-            public List<Vector3> contactPointsA;
-            public List<float> contactDepthsA;
-            public List<Vector3> contactPointsB;
-            public List<float> contactDepthsB;
-
-            public Vector3 n;
-            public float t;
-
-            public void SetValues(OrientedBox3D a, OrientedBox3D b, float dt)
-            {
-                if (R == null)  //init R
-                {
-                    R = new float[3, 3];
-                    AbsR = new float[3, 3];
-                }
-
-                A = a;
-                B = b;
-
-                relativePos = B.center - A.center;
-                relativeVel = B.velocity * dt - A.velocity * dt;
-
-                n.Set(0, 0, 0);
-                t = 1.0f;
-
-                if (contactPointsA == null)
-                {
-                    contactPointsA = new List<Vector3>();
-                    contactDepthsA = new List<float>();
-                    contactPointsB = new List<Vector3>();
-                    contactDepthsB = new List<float>();
-                }
-                else
-                {
-                    contactPointsA.Clear();
-                    contactDepthsA.Clear();
-                    contactPointsB.Clear();
-                    contactDepthsB.Clear();
-                }
-
-                r_min = float.MinValue;
-                normal_c = Vector3.zero;
-
-                // Calculate matrix for translation of b in a rotation space
-                for (int i = 0; i < 3; i++)
-                    for (int j = 0; j < 3; j++)
-                        R[i, j] = Vector3.Dot(A.axis[i], b.axis[j]);
-
-                // Bring displacement Vec in a rotation space
-                relativePosRot = new Vector3(Vector3.Dot(relativePos, A.axis[0]), Vector3.Dot(relativePos, A.axis[1]), Vector3.Dot(relativePos, A.axis[2]));
-
-                for (int i = 0; i < 3; i++)
-                    for (int j = 0; j < 3; j++)
-                        AbsR[i, j] = Mathf.Abs(R[i, j]) + Vector3.kEpsilon;
-            }
-        }
-
-        public void CalculateCollisions(float dt, List<GameObject> cubes)
+        /// <summary>
+        /// Starts the collision calculation process
+        /// </summary>
+        /// <param name="dt"> timestep </param>
+        /// <param name="cubes"> array containing all cubes </param>
+        /// <param name="Walls"> array containing all walls </param>
+        public void CalculateCollisions(float dt, List<GameObject> cubes, GameObject[] Walls)
         {
             GameObject cube0;
             GameObject cube1;
-            _parallelCutof = 1f - _epsilon;
             for (var i = 0; i < cubes.Count; i++)
             {
                 cube0 = cubes[i];
-                var renderer = cube0.GetComponent<MeshRenderer>();
-                renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
+                WallCollisionSolver.CollideWithWalls(ref cube0, Walls);
+
                 for (var j = 0; j < cubes.Count; j++)
                 {
                     cube1 = cubes[j];
                     if (cube0 == cube1) continue;
-                    var collision = _Collide(cube0.GetComponent<ObjectController>().anSimCollider, cube1.GetComponent<ObjectController>().anSimCollider, dt);
+                    var collision = _Collide(cube0, cube1, dt);
                     if (collision)
                     {
-                        _ChangeColor(cube1, cube0);
+                        ContactGenerator.ComputeCollisionInfo(ref coll);
+                        _CalculateCollisionResponse(cube0, cube1);
 
-                        CollisionPointSolver.ComputeCollisionInfo(ref coll);
-                        _CalculateCollisionResponse();
+                        _ChangeColor(cube0, cube1);
                     }
                 }
             }
         }
 
-        private void _ChangeColor(GameObject cube1, GameObject cube0)
+        private void _ChangeColor(GameObject cube0, GameObject cube1)
         {
-            var renderer = cube1.GetComponent<MeshRenderer>();
-            renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-            renderer = cube0.GetComponent<MeshRenderer>();
-            renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            var script = cube0.GetComponent<SmallCubeController>();
+            if (script != null)
+            {
+                script.ChangeColor(Time.realtimeSinceStartup);
+            }
+            script = cube1.GetComponent<SmallCubeController>();
+            if (script != null)
+            {
+                script.ChangeColor(Time.realtimeSinceStartup);
+            }
         }
 
-        private bool _Collide(OrientedBox3D cube0, OrientedBox3D cube1, float dt)
+        /// <summary>
+        /// Checks collision between two cubes
+        /// </summary>
+        /// <param name="cube0"></param>
+        /// <param name="cube1"></param>
+        /// <param name="dt"></param>
+        /// <returns> true, if collision occured, all information is stored in coll</returns>
+        private bool _Collide(GameObject cube0, GameObject cube1, float dt)
         {
             coll.SetValues(cube0, cube1, dt);
 
-            var mag = coll.relativeVel.sqrMagnitude;
-            if (coll.relativeVel.sqrMagnitude > Vector3.kEpsilon)
-                //return _IntervalIntersectTime();
-                if (!CollisionSolver.IntervalIntersectTime(ref coll)) return false;
+            return _StaticCollision();
 
-            // Test all face normals of A
+            //if (_StaticCollision()) return true;
+
+            //return _DynamicCollision();
+        }
+
+        private bool _StaticCollision()
+        {
             if (!CollisionSolver.FaceNormalsIntersect(ref coll)) return false;
+
+            if (coll.hasParallelAxis)
+                return CollisionSolver.Intersect2D(ref coll);
 
             return CollisionSolver.EdgesIntersect(ref coll);
         }
 
-        private void _CalculateCollisionResponse()
+        private bool _DynamicCollision()
         {
-            //if (coll.contactPointsA.Count > 0 && coll.contactPointsA[0].sqrMagnitude > Vector3.kEpsilon)
-            //{
-            //    Vector3 point = Vector3.zero;
-            //    for (var i = 0; i < coll.contactPointsA.Count; i++)
-            //    {
-            //        point += coll.contactPointsA[i];
-            //    }
-            //    point /= coll.contactPointsA.Count;
+            var mag = coll.relativeVelocity.sqrMagnitude;
+            if (coll.relativeVelocity.sqrMagnitude > Vector3.kEpsilon)
+                if (CollisionSolver.IntervalIntersectTime(ref coll))
+                {
+                    ContactGenerator.FindDynamicPoint(ref coll);
+                }
+            return false;
+        }
 
-            //    GameObject.Find("CollisionPoint").GetComponent<Transform>().position = point;
-            //}
+        /// <summary>
+        /// divides the two cubes and add forces
+        /// </summary>
+        /// <param name="a"></param>
+        /// <param name="b"></param>
+        private void _CalculateCollisionResponse(GameObject a, GameObject b)
+        {
+            if (coll.contacts.Count <= 0) return;
+            int i, index;
+            Vector3[] positionChange = new Vector3[2], rotationChange = new Vector3[2];
+            float[] rotationAngle = new float[2];
+            float max;
+            Vector3 cp;
+
+            int positionIterationsUsed = 0;
+            while (positionIterationsUsed < 4)
+            {
+                max = 0;//positionEpsilon;
+                index = -1;
+                for (i = 0; i < coll.contacts.Count; i++)
+                {
+                    if (coll.contacts[i].depth > max)
+                    {
+                        max = coll.contacts[i].depth;
+                        index = i;
+                    }
+                }
+                if (index == -1) break;
+
+                ResolveOverlap(coll.contacts[index], ref positionChange, ref rotationChange, ref rotationAngle);
+
+                UpdatePenetrations(coll.contacts, index, ref positionChange, ref rotationChange, ref rotationAngle);
+
+                positionIterationsUsed++;
+            }
+
+            //ResolveCollision(coll.contacts[i]);
+
+            //ResolveOverlap(a, b);
+
+            ResolveCollision(a, b);
+
+            coll.Clear();
+        }
+
+        /// <summary>
+        /// Updates the penetration of all other collision points depending on change from previous position correction
+        /// </summary>
+        /// <param name="c"> collision points </param>
+        /// <param name="index"> index of last changed point </param>
+        /// <param name="positionChange"></param>
+        /// <param name="rotationChange"></param>
+        /// <param name="rotationAmount"></param>
+        private void UpdatePenetrations(List<Contact> c, int index, ref Vector3[] positionChange, ref Vector3[] rotationChange, ref float[] rotationAmount)
+        {
+            Vector3 cp;
+            for(int i = 0; i < c.Count; i++)
+            {
+                if (c[i].gameObject[0] != null)
+                {
+                    if (c[i].gameObject[0] == c[index].gameObject[0])
+                    {
+                        cp = Vector3.Cross(rotationChange[0], c[i].relativeContactPosition[0]);
+                        cp += positionChange[0];
+
+                        c[i].depth -= Vector3.Dot(cp, c[i].normal) * rotationAmount[0];
+                    }
+                    else if (c[i].gameObject[0] == c[index].gameObject[1])
+                    {
+                        cp = Vector3.Cross(rotationChange[1], c[i].relativeContactPosition[0]);
+                        cp += positionChange[1];
+
+                        c[i].depth -= Vector3.Dot(cp, c[i].normal) * rotationAmount[1];
+                    }
+                }
+                if (c[i].gameObject[1] != null)
+                {
+                    if(c[i].gameObject[1] == c[index].gameObject[0])
+                    {
+                        cp = Vector3.Cross(rotationChange[0], c[i].relativeContactPosition[1]);
+                        cp += positionChange[0];
+
+                        c[i].depth += Vector3.Dot(cp, c[i].normal) * rotationAmount[0];
+                    }
+                }
+                else if(c[i].gameObject[1] == c[index].gameObject[1])
+                {
+                    cp = Vector3.Cross(rotationChange[1], c[i].relativeContactPosition[1]);
+                    cp += positionChange[1];
+
+                    c[i].depth += Vector3.Dot(cp, c[i].normal) * rotationAmount[1];
+                }
+            }
+        }
+
+        /// <summary>
+        /// Resolves the overlap of two objects in a collision point
+        /// </summary>
+        /// <param name="contact"> Contact containing collision data </param>
+        /// <param name="positionChange"></param>
+        /// <param name="rotationDirection"></param>
+        /// <param name="rotationAmount"></param>
+        private void ResolveOverlap(Contact contact, ref Vector3[] positionChange, ref Vector3[] rotationDirection, ref float[] rotationAmount)
+        {
+            float[] masses = new float[2];
+            Matrix3[] inertias = new Matrix3[2];
+            State[] state = new State[2];
+            state[0] = contact.gameObject[0].GetComponent<ObjectController>().nextState;
+            masses[0] = state[0].inverseMass;
+            inertias[0] = coll.A.inverseInertiaTensorWorld;
+
+            if (contact.gameObject[1] != null)
+            {
+                state[1] = contact.gameObject[1].GetComponent<ObjectController>().nextState;
+                masses[1] = state[1].inverseMass;
+                inertias[1] = coll.B.inverseInertiaTensorWorld;
+            }
+
+            ContactResolver.ResolveOverlap(contact, masses, inertias, ref positionChange, ref rotationDirection, ref rotationAmount);
+
+            Transform[] trans = new Transform[2];
+
+            trans[0] = contact.gameObject[0].GetComponent<Transform>();
+            trans[0].position += positionChange[0] * masses[0];
+            trans[0].rotation *= Quaternion.AngleAxis(rotationAmount[0] * Mathf.PI, rotationDirection[0]);
+
+            if (contact.gameObject[1] != null)
+            {
+                trans[1] = contact.gameObject[1].GetComponent<Transform>();
+                trans[1].position += positionChange[1] * masses[1];
+                trans[1].rotation *= Quaternion.AngleAxis(rotationAmount[1] * Mathf.PI, rotationDirection[1]);
+            }
+        }
+
+        /// <summary>
+        /// Adds forces to colliding cubes
+        /// </summary>
+        /// <param name="a"></param>
+        /// <param name="b"></param>
+        private void ResolveCollision(GameObject a, GameObject b)
+        {
+            for (int i = 0; i < coll.contacts.Count; i++)
+            {
+                Rigidbody rigitbodyA = a.GetComponent<Rigidbody>(),
+                    rigitbodyB = b.GetComponent<Rigidbody>();
+                State stateA = a.GetComponent<ObjectController>().nextState,
+                    stateB = b.GetComponent<ObjectController>().nextState;
+                Transform transA = a.GetComponent<Transform>(),
+                    transB = b.GetComponent<Transform>();
+
+                Vector3 force0 = Vector3.zero;
+                Vector3 torque0 = Vector3.zero;
+
+                Vector3 force1 = Vector3.zero;
+                Vector3 torque1 = Vector3.zero;
+
+                ContactResolver.ResolveCollision(coll.contacts[i].normal, coll.contacts[i].depth, coll.contacts[i].point,
+                    transA.position, rigitbodyA.velocity, rigitbodyA.angularVelocity, stateA.inverseMass, stateA.mass, stateA.inverseInertiaTensor, ref force0, ref torque0,
+                    transB.position, rigitbodyB.velocity, rigitbodyB.angularVelocity, stateB.inverseMass, stateB.mass, stateB.inverseInertiaTensor, ref force1, ref torque1);
+
+                if (stateA.inverseMass > 0f && stateA.mass > 1)
+                {
+                    rigitbodyA.velocity += force0;
+                    rigitbodyA.angularVelocity += torque0;
+                    //rigitbodyA.AddForce(force0);
+                    //rigitbodyA.AddTorque(torque0);
+                }
+
+                if (stateB.inverseMass > 0f && stateB.mass > 1)
+                {
+                    rigitbodyB.velocity += force1;
+                    rigitbodyB.angularVelocity += torque1;
+                    //rigitbodyB.AddForce(force1);
+                    //rigitbodyB.AddTorque(torque1);
+                }
+            }
         }
     }
 }

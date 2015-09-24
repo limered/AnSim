@@ -19,16 +19,17 @@ namespace Assets.Scripts.Physics
 
         public float mass { get; private set; }                 // Mass of object
         public float inverseMass { get; private set; }
-        public float inertiaTensor { get; private set; }        // Inertia Tensor of object (We use only cubes in physics sim, so only one value)
-        public float inverseInertiaTensor { get; private set; }
+        public Vector3 inertiaTensor { get; private set; }        // Inertia Tensor of object (We use only cubes in physics sim, so only one value)
+        public Vector3 inverseInertiaTensor;
 
-        public State(Vector3 startPosition, Quaternion startOriantation, float mass, float inertiaTensor) {
+        public State(Vector3 startPosition, Quaternion startOriantation, float mass, Vector3 inertiaTensor) {
             position = startPosition;
             orientation = startOriantation;
             this.mass = mass;
             inverseMass = 1.0f / mass;
             this.inertiaTensor = inertiaTensor;
-            inverseInertiaTensor = 1.0f / inertiaTensor;
+            inverseInertiaTensor = Vector3.zero;
+            for (int i = 0; i < 3; i++) inverseInertiaTensor[i] = 1.0f / inertiaTensor[i];
         }
 
         /// <summary>
@@ -44,7 +45,7 @@ namespace Assets.Scripts.Physics
         /// </summary>
         public void RecalculateRotation()
         {
-            angularVelocity = angularMomentum * inverseInertiaTensor;
+            angularVelocity = Vector3.Cross(angularMomentum, inverseInertiaTensor);
             AnSimMath.NormalizeQuaternion(orientation);
             spin = AnSimMath.QuatScale(new Quaternion(angularVelocity.x, angularVelocity.y, angularVelocity.z, 0) * orientation, 0.5f);
         }

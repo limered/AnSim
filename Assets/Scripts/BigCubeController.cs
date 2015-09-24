@@ -5,7 +5,7 @@ namespace Assets.Scripts
     /// <summary>
     /// Player class.
     /// </summary>
-    public class BigCubeController : ObjectController
+    internal class BigCubeController : ObjectController
     {
         public float MovementSpeed;
         
@@ -45,6 +45,14 @@ namespace Assets.Scripts
             {
                 result.x -= MovementSpeed;
             }
+            if (Input.GetKey(KeyCode.F))
+            {
+                result.y -= MovementSpeed;
+            }
+            if (Input.GetKey(KeyCode.R))
+            {
+                result.y += MovementSpeed;
+            }
 
             return result;
         }
@@ -53,7 +61,7 @@ namespace Assets.Scripts
         /// Only for testing
         /// </summary>
         void Update() {
-            GetComponent<Transform>().position += InputForce();
+            GetComponent<Rigidbody>().AddForce(InputForce());
         }
     }
 }

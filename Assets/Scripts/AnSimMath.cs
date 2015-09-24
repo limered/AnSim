@@ -47,5 +47,16 @@ namespace Assets.Scripts
             q.Set(q.x * n, q.y * n, q.z * n, q.w * n);
             return q;
         }
+
+        public static Quaternion QuatRotateByVector(Quaternion q, Vector3 v)
+        {
+            return q * new Quaternion(v.x, v.y, v.z, 0);
+        }
+
+        public static Quaternion QuatAddScaledVector(Quaternion q, Vector3 v, float s)
+        {
+            Quaternion qv = new Quaternion(v.x * s, v.y * s, v.z * s, 0);
+            return new Quaternion(qv.x * 0.5f, qv.y * 0.5f, qv.z * 0.5f, qv.w * 0.5f);
+        }
     }
 }

@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using UnityEngine;
 
 namespace Assets.Scripts.Collisions
@@ -9,13 +6,13 @@ namespace Assets.Scripts.Collisions
     /// <summary>
     /// Gets Collision points of two OBB in wirld-coordinates
     /// </summary>
-    internal class CollisionPointSolver
+    internal class ContactGenerator
     {
         /// <summary>
         /// Computes relevant collision information for a later collision response
         /// </summary>
         /// <param name="coll"> Collision Info containing all important data </param>
-        public static void ComputeCollisionInfo(ref CollisionSystem.CollisionInfo coll)
+        public static void ComputeCollisionInfo(ref CollisionInfo coll)
         {
             float depth = 0;
             if (coll.n_min.sqrMagnitude > Vector3.kEpsilon)
@@ -24,7 +21,7 @@ namespace Assets.Scripts.Collisions
             }
             else
             {
-                coll.n = coll.A.rotation * coll.normal_c;
+                coll.n = coll.A.orientation * coll.normal_c;
             }
             if (coll.invert_normal)
             {
@@ -36,7 +33,7 @@ namespace Assets.Scripts.Collisions
 
             if (coll.code > 6)
             {
-                _FindEdgePoints(depth, ref coll);
+                _FindEdgePoints(ref coll);
             }
             else if (coll.code <= 6)
             {
@@ -49,7 +46,7 @@ namespace Assets.Scripts.Collisions
         /// </summary>
         /// <param name="depth">Penetration depth</param>
         /// <param name="coll"> Collision Info containing all important data </param>
-        private static void _FindEdgePoints(float depth, ref CollisionSystem.CollisionInfo coll)
+        private static void _FindEdgePoints(ref CollisionInfo coll)
         {
             // Mittelpunkte der cubes
             Vector3 pa = coll.A.center;
@@ -82,13 +79,16 @@ namespace Assets.Scripts.Collisions
 
             // Berechne den schnittpunkt der beiden geraden
             float alpha, beta;
-            Vector3 c1, c2;
-            float dist_c1_c2 = Utils.ClosestPointTwoLines(pa, da, pb, db, true, out alpha, out beta, out c1, out c2);
+            Vector3 point1, point2;
+            float dist_c1_c2 = Utils.ClosestPointTwoLines(pa, da, pb, db, true, out alpha, out beta, out point1, out point2);
 
-            coll.contactPointsA.Add(c1);
-            coll.contactDepthsA.Add(coll.r_min);
-            coll.contactPointsB.Add(c1);
-            coll.contactDepthsA.Add(-coll.r_min);
+            // Correct normal and depth to go from A to B
+            Vector3 normal = (Vector3.Dot(coll.A.center - coll.B.center, coll.n) < 0) ? -coll.n : coll.n;
+            float depth = (coll.r_min < 0) ? -coll.r_min : coll.r_min;
+
+            Contact c1 = new Contact(coll.object_A, coll.object_B, Vector3.Lerp(point1, point2, 0.5f), normal, depth, coll.code);
+
+            coll.AddContact(c1);
         }
 
         /// <summary>
@@ -96,7 +96,7 @@ namespace Assets.Scripts.Collisions
         /// </summary>
         /// <param name="maxContacts"> Maximum number of points needed (not used atm) </param>
         /// <param name="coll"> Collision Info containing all important data </param>
-        private static void _FindFacePoints(int maxContacts, ref CollisionSystem.CollisionInfo coll)
+        private static void _FindFacePoints(int maxContacts, ref CollisionInfo coll)
         {
             Vector3[] Aa, Ab;
             Vector3 Ca, Cb;
@@ -217,31 +217,122 @@ namespace Assets.Scripts.Collisions
 
             if (cnum < 1) return;
 
-            ////Immer alle Punkte werden berechnet
-            //if (maxContacts > cnum) maxContacts = cnum;
-            //if (maxContacts < 1) maxContacts = 1;
+            // Correct normal to go from A to B
+            Vector3 normal = (Vector3.Dot(coll.A.center - coll.B.center, coll.n) < 0) ? -coll.n : coll.n;
 
-            //if (cnum <= maxContacts)
-            //{
+            for (int i = 0; i < cnum; i++)
+            {
+                coll.AddContact(new Contact(coll.object_A, coll.object_B, points[i] + Ca, normal, depths[i], coll.code));
+            }
+        }
+
+
+        /// <summary>
+        /// Not used atm
+        /// </summary>
+        /// <param name="coll"></param>
+        public static void FindDynamicPoint(ref CollisionInfo coll)
+        {
+            if (coll.code == 0) return;
+            // Last intersection As face
             if (coll.code <= 3)
             {
-                for (int i = 0; i < cnum; i++)
-                {
-                    coll.contactPointsA.Add(points[i] + Ca);
-                    coll.contactDepthsA.Add(-depths[i]);
-                }
-                coll.n = -coll.n;
+                _GenerateDynamicFacePointA(ref coll);
             }
-            else
+            else if (coll.code <= 6)
             {
-                for (int i = 0; i < cnum; i++)
-                {
-                    coll.contactPointsA.Add(points[i] + Ca - coll.n * depths[i]);
-                    coll.contactDepthsA.Add(-depths[i]);
-                }
-                coll.n = -coll.n;
+                _GenerateDynamicFacePointB(ref coll);
             }
-            //}
+        }
+
+        private static float _MaxVectorNumber(Vector3 v)
+        {
+            return Math.Max(Math.Max(v.x, v.y), v.z);
+        }
+
+        private static float _MinVectorNumber(Vector3 v)
+        {
+            return Math.Min(Math.Min(v.x, v.y), v.z);
+        }
+
+        private static void _GenerateDynamicFacePointA(ref CollisionInfo coll)
+        {
+            Vector3 y = Vector3.zero;
+            float sign;
+            int i = coll.tested_axis_0;
+            float yj = float.MaxValue;
+            Vector3 point = Vector3.zero;
+            for (int j = 0; j < 3; j++)
+            {
+                sign = (coll.R[i, j] > 0) ? 1 : -1;
+                y[i] = -1 * sign * coll.B.extents[j];
+            }
+            for (int j = 0; j < 3; j++)
+            {
+                if (coll.B.extents[j] <= _MaxVectorNumber(y))
+                {
+                    yj = coll.B.extents[j];
+                    point = coll.B.center + coll.B.axis[j] * yj;
+                }
+                else if (-coll.B.extents[j] >= _MinVectorNumber(y))
+                {
+                    yj = -coll.B.extents[j];
+                    point = coll.B.center + coll.B.axis[j] * yj;
+                }
+            }
+            if (yj == float.MaxValue)
+            {
+                for (int j = 0; j < 3; j++)
+                {
+                    if (y[j] < yj)
+                    {
+                        yj = y[j];
+                        point = coll.B.center + coll.B.axis[j] * yj;
+                    }
+                }
+            }
+
+            //coll.contactPointsA.Add(point);
+        }
+
+        private static void _GenerateDynamicFacePointB(ref CollisionInfo coll)
+        {
+            Vector3 x = Vector3.zero;
+            float sign;
+            int j = coll.tested_axis_0;
+            float xi = float.MaxValue;
+            Vector3 point = Vector3.zero;
+            for (int i = 0; i < 3; i++)
+            {
+                sign = (coll.R[i, j] > 0) ? 1 : -1;
+                x[i] = 1 * sign * coll.A.extents[i];
+            }
+            for (int i = 0; i < 3; i++)
+            {
+                if (coll.A.extents[i] <= _MaxVectorNumber(x))
+                {
+                    xi = coll.A.extents[i];
+                    point = coll.A.center + coll.A.axis[i] * xi;
+                }
+                else if (-coll.A.extents[i] >= _MinVectorNumber(x))
+                {
+                    xi = -coll.A.extents[i];
+                    point = coll.A.center + coll.A.axis[i] * xi;
+                }
+            }
+            if (xi == float.MaxValue)
+            {
+                for (int i = 0; i < 3; i++)
+                {
+                    if (x[i] < xi)
+                    {
+                        xi = x[i];
+                        point = coll.A.center + coll.A.axis[i] * xi;
+                    }
+                }
+            }
+
+            //coll.contactPointsA.Add(point);
         }
     }
 }

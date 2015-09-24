@@ -8,7 +8,7 @@ namespace Assets.Scripts
     /// <summary>
     /// Base class for all physics / collision based objects in simulation.
     /// </summary>
-    public abstract class ObjectController : MonoBehaviour
+    internal abstract class ObjectController : MonoBehaviour
     {
 
         public OrientedBox3D anSimCollider;
@@ -20,6 +20,8 @@ namespace Assets.Scripts
         public float LinearDamping;
         public float AngularDamping;
 
+        public float Restitution;
+
         public Vector3 CollisionForce;  // public und in unity zu sehen für testing
         public Vector3 CollisionTorque; // public und in unity zu sehen für testing
 
@@ -30,7 +32,10 @@ namespace Assets.Scripts
         {
             Mass = (Mass <= 0) ? 1 : Mass;
             var transform = GetComponent<Transform>();
-            lastState = new State(transform.position, transform.rotation, Mass, 0f); //TODO Inertia Tensor aus Größe/Scale berechnen
+            Vector3 inertiaTensor = new Vector3(Mass * (transform.localScale.y * transform.localScale.y + transform.localScale.z * transform.localScale.z / 12),
+                Mass * (transform.localScale.x * transform.localScale.x + transform.localScale.z * transform.localScale.z / 12),
+                Mass * (transform.localScale.x * transform.localScale.x + transform.localScale.y * transform.localScale.y / 12));
+            lastState = new State(transform.position, transform.rotation, Mass, inertiaTensor); //TODO Inertia Tensor aus Größe/Scale berechnen
             nextState = lastState.Clone();
             anSimCollider = new OrientedBox3D();
             anSimCollider.UpdateDataFromObject(gameObject);

@@ -15,6 +15,8 @@ namespace Assets.Scripts
 
         static public float GravityConstant = -9.8f;
 
+        static public bool isWater = false;
+
         private float _accumulator = 0;
         private CollisionSystem _collisions = new CollisionSystem();
         private List<GameObject> _cubes = new List<GameObject>();
@@ -25,7 +27,7 @@ namespace Assets.Scripts
         // Use this for initialization
         private void Start()
         {
-            InstantiateSmallCubes(-20, 20, 2);
+            InstantiateSmallCubes(-20, 20, 4);
             //AddWallsToInstancesList();
             _AddPlayer();
         }
@@ -42,7 +44,7 @@ namespace Assets.Scripts
             {
                 for (int j = min; j <= max; j += stepSize)
                 {
-                    var smallCube = (GameObject)Instantiate(SmallCubePrefab, new Vector3(i, 1, j), Quaternion.identity);//Quaternion.AngleAxis(Random.Range(0, 90), new Vector3(0.5f, 0.5f, 0)));
+                    var smallCube = (GameObject)Instantiate(SmallCubePrefab, new Vector3(i, 5, j), Quaternion.identity);//Quaternion.AngleAxis(Random.Range(0, 90), new Vector3(0.5f, 0.5f, 0)));
                     //smallCube.GetComponent<ObjectController>().anSimCollider.UpdateDataFromObject(smallCube);
                     _cubes.Add(smallCube);
 
@@ -57,7 +59,8 @@ namespace Assets.Scripts
         {
             for (int i = 0; i < Walls.Length; i++)
             {
-                //Walls[i].GetComponent<ObjectController>().anSimCollider.UpdateDataFromObject(Walls[i]);
+                //var wallC = Walls[i].GetComponent<ObjectController>();
+                //wallC.anSimCollider.UpdateDataFromObject(Walls[i]);
                 //_cubes.Add(Walls[i]);
             }
         }
@@ -65,13 +68,9 @@ namespace Assets.Scripts
         private void _AddPlayer()
         {
             var playerCube = GameObject.Find("BigCube");
-            //playerCube.GetComponent<ObjectController>().lastState.velocity = new Vector3(5, 0, 0);
-            //playerCube.GetComponent<ObjectController>().nextState.velocity = new Vector3(5, 0, 0);
             _cubes.Add(playerCube);
 
             //var smallCube = GameObject.Find("SmallCube");
-            //smallCube.GetComponent<ObjectController>().lastState.velocity = new Vector3(5, 0, 0);
-            //smallCube.GetComponent<ObjectController>().nextState.velocity = new Vector3(5, 0, 0);
             //_cubes.Add(smallCube);
 
         }
@@ -87,7 +86,7 @@ namespace Assets.Scripts
 
             while (_accumulator > _timeStep)
             {
-                _collisions.CalculateCollisions(dt, _cubes);
+                _collisions.CalculateCollisions(dt, _cubes, Walls);
                 _physics.IntegratePhysics(dt, _cubes);
 
                 _accumulator -= _timeStep;
