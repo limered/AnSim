@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Assets.Scripts.Collisions
@@ -52,8 +53,12 @@ namespace Assets.Scripts.Collisions
             object_B = b;
             A = a.GetComponent<ObjectController>().anSimCollider;
             B = b.GetComponent<ObjectController>().anSimCollider;
-
-            relativePosition = B.center - A.center;
+            try {
+                relativePosition = B.center - A.center;
+            }
+            catch (Exception e) {
+                Debug.Log("test");
+            }
             relativePositionRotated = new Vector3(Vector3.Dot(relativePosition, A.axis[0]), Vector3.Dot(relativePosition, A.axis[1]), Vector3.Dot(relativePosition, A.axis[2]));
             relativeVelocity = A.velocity * dt - B.velocity * dt;
 

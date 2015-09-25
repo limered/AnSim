@@ -8,16 +8,16 @@ namespace Assets.Scripts
     internal class BigCubeController : ObjectController
     {
         public float MovementSpeed;
-        
+
         /// <summary>
         /// Overrides base class implementation and adds a input force calculation.
         /// </summary>
         /// <param name="force"></param>
-        public override void LinearForces(Vector3 force)
+        public override void LinearForces(ref Vector3 force)
         {
             if (!IsAnimated) return;
 
-            base.LinearForces(force);
+            base.LinearForces(ref force);
 
             force += InputForce();
         }
@@ -60,8 +60,20 @@ namespace Assets.Scripts
         /// <summary>
         /// Only for testing
         /// </summary>
-        void Update() {
-            GetComponent<Rigidbody>().AddForce(InputForce());
+        private void Update()
+        {
+            Vector3 force = Vector3.zero;
+            LinearForces(ref force);
+
+            Vector3 torque = Vector3.zero;
+            RotationForces(ref torque);
+
+            GetComponent<Rigidbody>().AddForce(force);
+            GetComponent<Rigidbody>().AddTorque(torque);
+
+            lastFrameAcceleration = force * nextState.inverseMass;
+
+            //GetComponent<Rigidbody>().AddForce(InputForce());
         }
     }
 }

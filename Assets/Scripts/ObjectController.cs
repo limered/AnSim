@@ -25,6 +25,10 @@ namespace Assets.Scripts
         public Vector3 CollisionForce;  // public und in unity zu sehen für testing
         public Vector3 CollisionTorque; // public und in unity zu sehen für testing
 
+        public Vector3 accumulatedForce;
+        public Vector3 lastFrameAcceleration;
+
+
         /// <summary>
         /// Instantiates physics and collision components of this object.
         /// </summary>
@@ -48,49 +52,52 @@ namespace Assets.Scripts
         /// Calculates movement forces for this object.
         /// </summary>
         /// /// <param name="force"> Container for force calculation </param>
-        public virtual void LinearForces(Vector3 force)
+        public virtual void LinearForces(ref Vector3 force)
         {
             if (!IsAnimated) return;
 
-            Gravity(force);
-            MovementDamping(force);
+            Gravity(ref force);
+            MovementDamping(ref force);
         }
 
         /// <summary>
         /// Calculates rotational forces for this object;
         /// </summary>
         /// <param name="torque"> Container for force calculation </param>
-        public virtual void RotationForces(Vector3 torque)
+        public virtual void RotationForces(ref Vector3 torque)
         {
             if (!IsAnimated) return;
 
-            RotationalDamping(torque);
+            RotationalDamping(ref torque);
         }
 
         /// <summary>
         /// Adds gravity to force container for calculation.
         /// </summary>
         /// <param name="force"> Container for force calculation </param>
-        public void Gravity(Vector3 force)
+        public void Gravity(ref Vector3 force)
         {
-            force.y += MainProgram.GravityConstant;
+            force.y += MainProgram.GravityConstant * nextState.mass;
         }
 
         /// <summary>
         /// Adds a force for damping of linear movement of this object (i.e. Reibung der Luft)
         /// </summary>
         /// <param name="force"> Container for force calculation </param>
-        public virtual void MovementDamping(Vector3 force) {
-            force -= LinearDamping * nextState.velocity;
+        public virtual void MovementDamping(ref Vector3 force) {
+
+            var tempVel = GetComponent<Rigidbody>().velocity;
+
+            force -= LinearDamping * tempVel * nextState.mass;//nextState.velocity;
         }
 
         /// <summary>
         /// Adds a damping force on rotation.
         /// </summary>
         /// <param name="torque"> Container for torque calculation </param>
-        public virtual void RotationalDamping(Vector3 torque)
+        public virtual void RotationalDamping(ref Vector3 torque)
         {
-            torque -= AngularDamping * nextState.angularVelocity;
+            torque -= AngularDamping * nextState.angularVelocity * nextState.mass;
         }
     }
 }

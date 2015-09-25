@@ -109,13 +109,14 @@ namespace Assets.Scripts.Collisions
         {
             if (coll.contacts.Count <= 0) return;
             int i, index;
-            Vector3[] positionChange = new Vector3[2], rotationChange = new Vector3[2];
+            Vector3[] positionChange = new Vector3[2],
+                rotationChange = new Vector3[2],
+                velocityChange = new Vector3[2];
             float[] rotationAngle = new float[2];
             float max;
-            Vector3 cp;
 
             int positionIterationsUsed = 0;
-            while (positionIterationsUsed < 4)
+            while (positionIterationsUsed < 8)
             {
                 max = 0;//positionEpsilon;
                 index = -1;
@@ -136,11 +137,29 @@ namespace Assets.Scripts.Collisions
                 positionIterationsUsed++;
             }
 
-            //ResolveCollision(coll.contacts[i]);
+            max = 0;
 
-            //ResolveOverlap(a, b);
+            int velocityIterationsUsed = 0;
+            while (velocityIterationsUsed < 8)
+            {
+                max = 0;
+                index = -1;
+                for (i = 0; i < coll.contacts.Count; i++)
+                {
+                    if (coll.contacts[i].depth > max)
+                    {
+                        max = coll.contacts[i].depth;
+                        index = i;
+                    }
+                }
+                if (index == -1) break;
 
-            ResolveCollision(a, b);
+                ResolveCollision(coll.contacts[index], ref velocityChange, ref rotationChange);
+
+                UpdatePenetrationsVel(coll.contacts, index, ref velocityChange, ref rotationChange);
+
+                velocityIterationsUsed++;
+            }
 
             coll.Clear();
         }
@@ -195,6 +214,52 @@ namespace Assets.Scripts.Collisions
             }
         }
 
+        private void UpdatePenetrationsVel(List<Contact> c, int index, ref Vector3[] velocityChange, ref Vector3[] rotationChange)
+        {
+            Vector3 cp;
+            for (int i = 0; i < c.Count; i++)
+            {
+                if (c[i].gameObject[0] != null)
+                {
+                    if (c[i].gameObject[0] == c[index].gameObject[0])
+                    {
+                        cp = Vector3.Cross(rotationChange[0], c[i].relativeContactPosition[0]);
+                        cp += velocityChange[0];
+
+                        c[i].contactVelocity += c[i].contactToWorld.TransformTranspose(cp);
+                        c[i].CalculateDesiredDeltaVelocity();
+                    }
+                    else if (c[i].gameObject[0] == c[index].gameObject[1])
+                    {
+                        cp = Vector3.Cross(rotationChange[1], c[i].relativeContactPosition[0]);
+                        cp += velocityChange[1];
+
+                        c[i].contactVelocity += c[i].contactToWorld.TransformTranspose(cp);
+                        c[i].CalculateDesiredDeltaVelocity();
+                    }
+                }
+                if (c[i].gameObject[1] != null)
+                {
+                    if (c[i].gameObject[1] == c[index].gameObject[0])
+                    {
+                        cp = Vector3.Cross(rotationChange[0], c[i].relativeContactPosition[1]);
+                        cp += velocityChange[0];
+
+                        c[i].contactVelocity -= c[i].contactToWorld.TransformTranspose(cp);
+                        c[i].CalculateDesiredDeltaVelocity();
+                    }
+                }
+                else if (c[i].gameObject[1] == c[index].gameObject[1])
+                {
+                    cp = Vector3.Cross(rotationChange[1], c[i].relativeContactPosition[1]);
+                    cp += velocityChange[1];
+
+                    c[i].contactVelocity -= c[i].contactToWorld.TransformTranspose(cp);
+                    c[i].CalculateDesiredDeltaVelocity();
+                }
+            }
+        }
+
         /// <summary>
         /// Resolves the overlap of two objects in a collision point
         /// </summary>
@@ -222,11 +287,17 @@ namespace Assets.Scripts.Collisions
 
             Transform[] trans = new Transform[2];
 
-            trans[0] = contact.gameObject[0].GetComponent<Transform>();
-            trans[0].position += positionChange[0] * masses[0];
-            trans[0].rotation *= Quaternion.AngleAxis(rotationAmount[0] * Mathf.PI, rotationDirection[0]);
+            var controller = contact.gameObject[0].GetComponent<ObjectController>();
+            if (controller.IsAnimated)
+            {
+                trans[0] = contact.gameObject[0].GetComponent<Transform>();
+                trans[0].position += positionChange[0] * masses[0];
+                trans[0].rotation *= Quaternion.AngleAxis(rotationAmount[0] * Mathf.PI, rotationDirection[0]);
+            }
 
-            if (contact.gameObject[1] != null)
+            controller = contact.gameObject[1].GetComponent<ObjectController>();
+
+            if (controller.IsAnimated && contact.gameObject[1] != null)
             {
                 trans[1] = contact.gameObject[1].GetComponent<Transform>();
                 trans[1].position += positionChange[1] * masses[1];
@@ -234,47 +305,44 @@ namespace Assets.Scripts.Collisions
             }
         }
 
-        /// <summary>
-        /// Adds forces to colliding cubes
-        /// </summary>
-        /// <param name="a"></param>
-        /// <param name="b"></param>
-        private void ResolveCollision(GameObject a, GameObject b)
+        private void ResolveCollision(Contact c, ref Vector3[] velocityChange, ref Vector3[] rotationChange)
         {
-            for (int i = 0; i < coll.contacts.Count; i++)
+            State[] states = new State[2];
+            float[] masses = new float[2];
+            Matrix3[] inertias = new Matrix3[2];
+            Rigidbody[] body = new Rigidbody[2];
+
+            states[0] = c.gameObject[0].GetComponent<ObjectController>().nextState;
+            masses[0] = states[0].inverseMass;
+            inertias[0] = new Matrix3();
+            inertias[0].SetDiagVector(states[0].inverseInertiaTensor);
+
+            if (c.gameObject[1] != null)
             {
-                Rigidbody rigitbodyA = a.GetComponent<Rigidbody>(),
-                    rigitbodyB = b.GetComponent<Rigidbody>();
-                State stateA = a.GetComponent<ObjectController>().nextState,
-                    stateB = b.GetComponent<ObjectController>().nextState;
-                Transform transA = a.GetComponent<Transform>(),
-                    transB = b.GetComponent<Transform>();
+                states[1] = c.gameObject[1].GetComponent<ObjectController>().nextState;
+                masses[1] = states[1].inverseMass;
+                inertias[1] = new Matrix3();
+                inertias[1].SetDiagVector(states[1].inverseInertiaTensor);
+            }
 
-                Vector3 force0 = Vector3.zero;
-                Vector3 torque0 = Vector3.zero;
+            ContactResolver.ResolveCollision(c, masses, inertias, ref velocityChange, ref rotationChange);
 
-                Vector3 force1 = Vector3.zero;
-                Vector3 torque1 = Vector3.zero;
+            var controller = c.gameObject[0].GetComponent<ObjectController>();
 
-                ContactResolver.ResolveCollision(coll.contacts[i].normal, coll.contacts[i].depth, coll.contacts[i].point,
-                    transA.position, rigitbodyA.velocity, rigitbodyA.angularVelocity, stateA.inverseMass, stateA.mass, stateA.inverseInertiaTensor, ref force0, ref torque0,
-                    transB.position, rigitbodyB.velocity, rigitbodyB.angularVelocity, stateB.inverseMass, stateB.mass, stateB.inverseInertiaTensor, ref force1, ref torque1);
+            if (controller.IsAnimated && states[0].inverseMass > 0f && states[0].mass > 0)
+            {
+                body[0] = c.gameObject[0].GetComponent<Rigidbody>();
+                body[0].velocity += velocityChange[0];
+                body[0].angularVelocity += rotationChange[0];
+            }
 
-                if (stateA.inverseMass > 0f && stateA.mass > 1)
-                {
-                    rigitbodyA.velocity += force0;
-                    rigitbodyA.angularVelocity += torque0;
-                    //rigitbodyA.AddForce(force0);
-                    //rigitbodyA.AddTorque(torque0);
-                }
+            controller = c.gameObject[1].GetComponent<ObjectController>();
 
-                if (stateB.inverseMass > 0f && stateB.mass > 1)
-                {
-                    rigitbodyB.velocity += force1;
-                    rigitbodyB.angularVelocity += torque1;
-                    //rigitbodyB.AddForce(force1);
-                    //rigitbodyB.AddTorque(torque1);
-                }
+            if (controller.IsAnimated && states[1] != null && states[1].inverseMass > 0f && states[1].mass > 0)
+            {
+                body[1] = c.gameObject[1].GetComponent<Rigidbody>();
+                body[1].velocity += velocityChange[1];
+                body[1].angularVelocity += rotationChange[1];
             }
         }
     }

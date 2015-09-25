@@ -18,7 +18,9 @@ namespace Assets.Scripts.Collisions
         public Matrix3 contactToWorld = new Matrix3();      // Transformation Matrix from world to contact space
         public Vector3[] relativeContactPosition = new Vector3[2]; // Relative position of the two objects in contact space
         public Vector3 contactVelocity;                            // Relative Velocity in Contact point space
-        float desiredDeltaVelocity;                         // Velocity needet to push the two objects apart
+        public float desiredDeltaVelocity;                         // Velocity needet to push the two objects apart
+
+        public Vector3 lastFrameAcc = Vector3.zero;
 
         public Contact(GameObject A, GameObject B, Vector3 point, Vector3 normal, float depth, int code)
         {
@@ -35,7 +37,8 @@ namespace Assets.Scripts.Collisions
         /// <summary>
         /// Recalculates all important collision information.
         /// </summary>
-        public void CalculateInternals() {
+        public void CalculateInternals()
+        {
             SwapObjects();
             CalculateContactBasis();
             CalculateRelativePosition();
@@ -59,7 +62,8 @@ namespace Assets.Scripts.Collisions
         /// <summary>
         /// Calculates a transformation matrix for transformation of points into contact space.
         /// </summary>
-        public void CalculateContactBasis() {
+        public void CalculateContactBasis()
+        {
             Vector3[] contactTangent = new Vector3[2];
             if (Mathf.Abs(normal.x) > Mathf.Abs(normal.y))
             {
@@ -92,7 +96,8 @@ namespace Assets.Scripts.Collisions
         /// <summary>
         /// Sets the relative position of this contact point to both bodies
         /// </summary>
-        public void CalculateRelativePosition() {
+        public void CalculateRelativePosition()
+        {
             relativeContactPosition[0] = point - gameObject[0].GetComponent<Transform>().position;
             if (gameObject[1])
                 relativeContactPosition[1] = point - gameObject[1].GetComponent<Transform>().position;
@@ -101,13 +106,13 @@ namespace Assets.Scripts.Collisions
         /// <summary>
         /// Calculates the relative velocity in this point
         /// </summary>
-        public void CalculateContactVelocity() {
-
+        public void CalculateContactVelocity()
+        {
             var body = gameObject[0].GetComponent<Rigidbody>();
             contactVelocity = _CalculateLocalVelocity(body.angularVelocity, body.velocity, relativeContactPosition[0]);
             if (gameObject[1])
             {
-                body = gameObject[0].GetComponent<Rigidbody>();
+                body = gameObject[1].GetComponent<Rigidbody>();
                 contactVelocity -= _CalculateLocalVelocity(body.angularVelocity, body.velocity, relativeContactPosition[0]);
             }
         }
@@ -119,26 +124,45 @@ namespace Assets.Scripts.Collisions
         /// <param name="vel"> Linear velocity of body </param>
         /// <param name="relativeContactPos"> Relative position to point. </param>
         /// <returns> Local velocity in a certain point </returns>
-        private Vector3 _CalculateLocalVelocity(Vector3 rot, Vector3 vel, Vector3 relativeContactPos) {
+        private Vector3 _CalculateLocalVelocity(Vector3 rot, Vector3 vel, Vector3 relativeContactPos)
+        {
             return contactToWorld.TransformTranspose(Vector3.Cross(rot, relativeContactPos) + vel);
         }
 
         /// <summary>
         /// Calculates the min velocity that will push the two objects apart.
         /// </summary>
-        public void CalculateDesiredDeltaVelocity() {
-            var restitution = gameObject[0].GetComponent<ObjectController>().Restitution;
-            if(gameObject[1])
-                restitution += gameObject[1].GetComponent<ObjectController>().Restitution;
-            desiredDeltaVelocity = -contactVelocity.x * (1f + (restitution * 0.5f));
+        public void CalculateDesiredDeltaVelocity()
+        {
+            float velocityLimit = 0.25f;
+
+            var controller = gameObject[0].GetComponent<ObjectController>();
+            float velocityFromAcc = Vector3.Dot(controller.lastFrameAcceleration, normal) * MainProgram._timeStep;
+
+            var restitution = controller.Restitution;
+            if (gameObject[1] != null)
+            {
+                controller = gameObject[1].GetComponent<ObjectController>();
+                velocityFromAcc -= Vector3.Dot(controller.lastFrameAcceleration, normal) * MainProgram._timeStep;
+                restitution += controller.Restitution;
+            }
+
+            restitution *= 0.5f;
+
+            //if (Mathf.Abs(contactVelocity.x) < velocityLimit)
+            //    restitution = 0f;
+
+            desiredDeltaVelocity = -contactVelocity.x * (1f + restitution);// * (contactVelocity.x - velocityFromAcc);
         }
 
         /************************ not used atm. *************************/
+
         public void Update(Vector3 point, float depth)
         {
             this.point = point;
             this.depth = depth;
         }
+
         public void Update(Vector3 point, float depth, Vector3 normal)
         {
             this.point = point;

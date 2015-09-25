@@ -22,7 +22,7 @@ namespace Assets.Scripts
         private List<GameObject> _cubes = new List<GameObject>();
         private PhysicsSystem _physics = new PhysicsSystem();
         private RenderingSystem _rendering = new RenderingSystem();
-        private float _timeStep = 0.02f;
+        public static float _timeStep = 0.02f;
 
         // Use this for initialization
         private void Start()
@@ -61,7 +61,7 @@ namespace Assets.Scripts
             {
                 //var wallC = Walls[i].GetComponent<ObjectController>();
                 //wallC.anSimCollider.UpdateDataFromObject(Walls[i]);
-                //_cubes.Add(Walls[i]);
+                _cubes.Add(Walls[i]);
             }
         }
 
@@ -86,8 +86,8 @@ namespace Assets.Scripts
 
             while (_accumulator > _timeStep)
             {
-                _collisions.CalculateCollisions(dt, _cubes, Walls);
-                _physics.IntegratePhysics(dt, _cubes);
+                _collisions.CalculateCollisions(_timeStep, _cubes, Walls);
+                _physics.IntegratePhysics(_timeStep, _cubes);
 
                 _accumulator -= _timeStep;
             }

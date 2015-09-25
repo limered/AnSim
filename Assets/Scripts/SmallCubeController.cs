@@ -28,6 +28,17 @@ namespace Assets.Scripts
 
                 render.material.color = currentColor;
             }
+
+            Vector3 force = Vector3.zero;
+            LinearForces(ref force);
+
+            Vector3 torque = Vector3.zero;
+            RotationForces(ref torque);
+
+            GetComponent<Rigidbody>().AddForce(force);
+            GetComponent<Rigidbody>().AddTorque(torque);
+
+            lastFrameAcceleration = force * nextState.inverseMass;
         }
 
         public void ChangeColor(float time)
