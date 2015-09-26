@@ -23,7 +23,7 @@ namespace Assets.Scripts.Collisions
             }
 
             var impulseContact = new Vector3(c.desiredDeltaVelocity / deltaVelocity, 0, 0);
-            Vector3 impulse = c.contactToWorld.Transform(impulseContact);
+            Vector3 impulse = c.contactToWorld.TransformTranspose(impulseContact);
 
             for (int b = 0; b < objectCount; b++)
             {

@@ -116,7 +116,7 @@ namespace Assets.Scripts.Collisions
             float max;
 
             int positionIterationsUsed = 0;
-            while (positionIterationsUsed < 8)
+            while (positionIterationsUsed < 4)
             {
                 max = 0;//positionEpsilon;
                 index = -1;
@@ -140,7 +140,7 @@ namespace Assets.Scripts.Collisions
             max = 0;
 
             int velocityIterationsUsed = 0;
-            while (velocityIterationsUsed < 8)
+            while (velocityIterationsUsed < 4)
             {
                 max = 0;
                 index = -1;
@@ -292,7 +292,7 @@ namespace Assets.Scripts.Collisions
             {
                 trans[0] = contact.gameObject[0].GetComponent<Transform>();
                 trans[0].position += positionChange[0] * masses[0];
-                trans[0].rotation *= Quaternion.AngleAxis(rotationAmount[0] * Mathf.PI, rotationDirection[0]);
+                trans[0].rotation *= Quaternion.AngleAxis(rotationAmount[0], rotationDirection[0]);
             }
 
             controller = contact.gameObject[1].GetComponent<ObjectController>();
@@ -301,7 +301,7 @@ namespace Assets.Scripts.Collisions
             {
                 trans[1] = contact.gameObject[1].GetComponent<Transform>();
                 trans[1].position += positionChange[1] * masses[1];
-                trans[1].rotation *= Quaternion.AngleAxis(rotationAmount[1] * Mathf.PI, rotationDirection[1]);
+                trans[1].rotation *= Quaternion.AngleAxis(rotationAmount[1], rotationDirection[1]);
             }
         }
 
@@ -332,8 +332,8 @@ namespace Assets.Scripts.Collisions
             if (controller.IsAnimated && states[0].inverseMass > 0f && states[0].mass > 0)
             {
                 body[0] = c.gameObject[0].GetComponent<Rigidbody>();
-                body[0].velocity += velocityChange[0];
-                body[0].angularVelocity += rotationChange[0];
+                body[0].velocity += (velocityChange[0] * states[0].inverseMass);
+                body[0].angularVelocity += (inertias[0].Transform(rotationChange[0]));
             }
 
             controller = c.gameObject[1].GetComponent<ObjectController>();
@@ -341,8 +341,8 @@ namespace Assets.Scripts.Collisions
             if (controller.IsAnimated && states[1] != null && states[1].inverseMass > 0f && states[1].mass > 0)
             {
                 body[1] = c.gameObject[1].GetComponent<Rigidbody>();
-                body[1].velocity += velocityChange[1];
-                body[1].angularVelocity += rotationChange[1];
+                body[1].velocity += (velocityChange[1] * states[1].inverseMass);
+                body[1].angularVelocity += (inertias[1].Transform(rotationChange[1]));
             }
         }
     }

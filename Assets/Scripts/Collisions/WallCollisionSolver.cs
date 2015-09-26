@@ -8,7 +8,7 @@ namespace Assets.Scripts.Collisions
     internal class WallCollisionSolver
     {
         public static float c = 10f;
-        public static float f = 3f;
+        public static float f = 4f;
 
         public static float k = 100f;
         public static float b = 5f;

@@ -126,7 +126,7 @@ namespace Assets.Scripts.Collisions
         /// <returns> Local velocity in a certain point </returns>
         private Vector3 _CalculateLocalVelocity(Vector3 rot, Vector3 vel, Vector3 relativeContactPos)
         {
-            return contactToWorld.TransformTranspose(Vector3.Cross(rot, relativeContactPos) + vel);
+            return contactToWorld.Transform(Vector3.Cross(rot, relativeContactPos) + vel);
         }
 
         /// <summary>
@@ -137,22 +137,23 @@ namespace Assets.Scripts.Collisions
             float velocityLimit = 0.25f;
 
             var controller = gameObject[0].GetComponent<ObjectController>();
-            float velocityFromAcc = Vector3.Dot(controller.lastFrameAcceleration, normal) * MainProgram._timeStep;
+            float velocityFromAcc = Vector3.Dot(controller.lastFrameAcceleration * MainProgram._timeStep, normal);
 
             var restitution = controller.Restitution;
             if (gameObject[1] != null)
             {
                 controller = gameObject[1].GetComponent<ObjectController>();
-                velocityFromAcc -= Vector3.Dot(controller.lastFrameAcceleration, normal) * MainProgram._timeStep;
+                velocityFromAcc -= Vector3.Dot(controller.lastFrameAcceleration * MainProgram._timeStep, normal);
                 restitution += controller.Restitution;
             }
 
             restitution *= 0.5f;
 
-            //if (Mathf.Abs(contactVelocity.x) < velocityLimit)
-            //    restitution = 0f;
+            if (Mathf.Abs(contactVelocity.x) < velocityLimit)
+                restitution = 0f;
 
-            desiredDeltaVelocity = -contactVelocity.x * (1f + restitution);// * (contactVelocity.x - velocityFromAcc);
+            //desiredDeltaVelocity = -contactVelocity.x * (1f + restitution);// * (contactVelocity.x - velocityFromAcc);
+            desiredDeltaVelocity = -contactVelocity.x - restitution * (contactVelocity.x - velocityFromAcc);
         }
 
         /************************ not used atm. *************************/

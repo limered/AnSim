@@ -88,7 +88,7 @@ namespace Assets.Scripts
 
             var tempVel = GetComponent<Rigidbody>().velocity;
 
-            force -= LinearDamping * tempVel * nextState.mass;//nextState.velocity;
+            force += -LinearDamping * tempVel;//nextState.velocity;
         }
 
         /// <summary>
@@ -97,7 +97,9 @@ namespace Assets.Scripts
         /// <param name="torque"> Container for torque calculation </param>
         public virtual void RotationalDamping(ref Vector3 torque)
         {
-            torque -= AngularDamping * nextState.angularVelocity * nextState.mass;
+            var tempVel = GetComponent<Rigidbody>().angularVelocity;
+
+            torque += -AngularDamping * tempVel;//nextState.angularVelocity * nextState.mass;
         }
     }
 }
