@@ -27,7 +27,11 @@ namespace Assets.Scripts
         // Use this for initialization
         private void Start()
         {
-            InstantiateSmallCubes(-20, 20, 4);
+            InstantiateSmallCubes(
+                -10, 5,
+                1.1f, 5, 
+                -11, 5, 
+                1.6f);
             //AddWallsToInstancesList();
             _AddPlayer();
         }
@@ -38,16 +42,17 @@ namespace Assets.Scripts
         /// <param name="min">Minimal position (x and z)</param>
         /// <param name="max">Maximal position (x and z)</param>
         /// <param name="stepSize">Sets the desity of small cubes on the ground ((max - min) / step * (max - min) / step, ie: (20 + 20) / 4 * (20 + 20) / 4 = 100 Würfel)</param>
-        private void InstantiateSmallCubes(int min, int max, int stepSize)
+        private void InstantiateSmallCubes(float xStart, int xCount, float yStart, int yCout, float zStart, int zCount, float step)
         {
-            for (int i = min; i <= max; i += stepSize)
+            for (int x = 0; x < xCount; x++)
             {
-                for (int j = min; j <= max; j += stepSize)
+                for (int y = 0; y < yCout; y++)
                 {
-                    var smallCube = (GameObject)Instantiate(SmallCubePrefab, new Vector3(i, 5, j), Quaternion.identity);//Quaternion.AngleAxis(Random.Range(0, 90), new Vector3(0.5f, 0.5f, 0)));
-                    //smallCube.GetComponent<ObjectController>().anSimCollider.UpdateDataFromObject(smallCube);
-                    _cubes.Add(smallCube);
-
+                    for (int z = 0; z < zCount; z++)
+                    {
+                        var smallCube = (GameObject)Instantiate(SmallCubePrefab, new Vector3(xStart + x*step, yStart + y*step, zStart + z*step), Quaternion.identity);
+                        _cubes.Add(smallCube);
+                    }
                 }
             }
         }

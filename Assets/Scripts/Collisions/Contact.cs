@@ -109,11 +109,13 @@ namespace Assets.Scripts.Collisions
         public void CalculateContactVelocity()
         {
             var body = gameObject[0].GetComponent<Rigidbody>();
-            contactVelocity = _CalculateLocalVelocity(body.angularVelocity, body.velocity, relativeContactPosition[0]);
+            var controller = gameObject[0].GetComponent<ObjectController>();
+            contactVelocity = _CalculateLocalVelocity(body.angularVelocity, body.velocity, relativeContactPosition[0], controller.lastFrameAcceleration);
             if (gameObject[1])
             {
                 body = gameObject[1].GetComponent<Rigidbody>();
-                contactVelocity -= _CalculateLocalVelocity(body.angularVelocity, body.velocity, relativeContactPosition[0]);
+                controller = gameObject[1].GetComponent<ObjectController>();
+                contactVelocity -= _CalculateLocalVelocity(body.angularVelocity, body.velocity, relativeContactPosition[1], controller.lastFrameAcceleration);
             }
         }
 
@@ -124,9 +126,14 @@ namespace Assets.Scripts.Collisions
         /// <param name="vel"> Linear velocity of body </param>
         /// <param name="relativeContactPos"> Relative position to point. </param>
         /// <returns> Local velocity in a certain point </returns>
-        private Vector3 _CalculateLocalVelocity(Vector3 rot, Vector3 vel, Vector3 relativeContactPos)
+        private Vector3 _CalculateLocalVelocity(Vector3 rot, Vector3 vel, Vector3 relativeContactPos, Vector3 lastFrameVelocity)
         {
-            return contactToWorld.Transform(Vector3.Cross(rot, relativeContactPos) + vel);
+            Vector3 contactVelocity = contactToWorld.TransformTranspose(Vector3.Cross(rot, relativeContactPos) + vel);
+            Vector3 accVelocity = lastFrameVelocity * MainProgram._timeStep;
+            accVelocity = contactToWorld.TransformTranspose(accVelocity);
+            accVelocity.x = 0;
+            contactVelocity += accVelocity;
+            return contactVelocity;
         }
 
         /// <summary>

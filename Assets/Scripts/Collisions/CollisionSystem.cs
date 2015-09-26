@@ -116,7 +116,7 @@ namespace Assets.Scripts.Collisions
             float max;
 
             int positionIterationsUsed = 0;
-            while (positionIterationsUsed < 4)
+            while (positionIterationsUsed < 2)
             {
                 max = 0;//positionEpsilon;
                 index = -1;
@@ -140,15 +140,15 @@ namespace Assets.Scripts.Collisions
             max = 0;
 
             int velocityIterationsUsed = 0;
-            while (velocityIterationsUsed < 4)
+            while (velocityIterationsUsed < 2)
             {
                 max = 0;
                 index = -1;
                 for (i = 0; i < coll.contacts.Count; i++)
                 {
-                    if (coll.contacts[i].depth > max)
+                    if (coll.contacts[i].desiredDeltaVelocity > max)
                     {
-                        max = coll.contacts[i].depth;
+                        max = coll.contacts[i].desiredDeltaVelocity;
                         index = i;
                     }
                 }
@@ -175,7 +175,7 @@ namespace Assets.Scripts.Collisions
         private void UpdatePenetrations(List<Contact> c, int index, ref Vector3[] positionChange, ref Vector3[] rotationChange, ref float[] rotationAmount)
         {
             Vector3 cp;
-            for(int i = 0; i < c.Count; i++)
+            for (int i = 0; i < c.Count; i++)
             {
                 if (c[i].gameObject[0] != null)
                 {
@@ -196,20 +196,20 @@ namespace Assets.Scripts.Collisions
                 }
                 if (c[i].gameObject[1] != null)
                 {
-                    if(c[i].gameObject[1] == c[index].gameObject[0])
+                    if (c[i].gameObject[1] == c[index].gameObject[0])
                     {
                         cp = Vector3.Cross(rotationChange[0], c[i].relativeContactPosition[1]);
                         cp += positionChange[0];
 
                         c[i].depth += Vector3.Dot(cp, c[i].normal) * rotationAmount[0];
                     }
-                }
-                else if(c[i].gameObject[1] == c[index].gameObject[1])
-                {
-                    cp = Vector3.Cross(rotationChange[1], c[i].relativeContactPosition[1]);
-                    cp += positionChange[1];
+                    else if (c[i].gameObject[1] == c[index].gameObject[1])
+                    {
+                        cp = Vector3.Cross(rotationChange[1], c[i].relativeContactPosition[1]);
+                        cp += positionChange[1];
 
-                    c[i].depth += Vector3.Dot(cp, c[i].normal) * rotationAmount[1];
+                        c[i].depth += Vector3.Dot(cp, c[i].normal) * rotationAmount[1];
+                    }
                 }
             }
         }
@@ -226,7 +226,7 @@ namespace Assets.Scripts.Collisions
                         cp = Vector3.Cross(rotationChange[0], c[i].relativeContactPosition[0]);
                         cp += velocityChange[0];
 
-                        c[i].contactVelocity += c[i].contactToWorld.TransformTranspose(cp);
+                        c[i].contactVelocity += c[i].contactToWorld.Transform(cp);
                         c[i].CalculateDesiredDeltaVelocity();
                     }
                     else if (c[i].gameObject[0] == c[index].gameObject[1])
@@ -234,7 +234,7 @@ namespace Assets.Scripts.Collisions
                         cp = Vector3.Cross(rotationChange[1], c[i].relativeContactPosition[0]);
                         cp += velocityChange[1];
 
-                        c[i].contactVelocity += c[i].contactToWorld.TransformTranspose(cp);
+                        c[i].contactVelocity += c[i].contactToWorld.Transform(cp);
                         c[i].CalculateDesiredDeltaVelocity();
                     }
                 }
@@ -245,17 +245,17 @@ namespace Assets.Scripts.Collisions
                         cp = Vector3.Cross(rotationChange[0], c[i].relativeContactPosition[1]);
                         cp += velocityChange[0];
 
-                        c[i].contactVelocity -= c[i].contactToWorld.TransformTranspose(cp);
+                        c[i].contactVelocity -= c[i].contactToWorld.Transform(cp);
                         c[i].CalculateDesiredDeltaVelocity();
                     }
-                }
-                else if (c[i].gameObject[1] == c[index].gameObject[1])
-                {
-                    cp = Vector3.Cross(rotationChange[1], c[i].relativeContactPosition[1]);
-                    cp += velocityChange[1];
+                    else if (c[i].gameObject[1] == c[index].gameObject[1])
+                    {
+                        cp = Vector3.Cross(rotationChange[1], c[i].relativeContactPosition[1]);
+                        cp += velocityChange[1];
 
-                    c[i].contactVelocity -= c[i].contactToWorld.TransformTranspose(cp);
-                    c[i].CalculateDesiredDeltaVelocity();
+                        c[i].contactVelocity -= c[i].contactToWorld.Transform(cp);
+                        c[i].CalculateDesiredDeltaVelocity();
+                    }
                 }
             }
         }
@@ -315,14 +315,14 @@ namespace Assets.Scripts.Collisions
             states[0] = c.gameObject[0].GetComponent<ObjectController>().nextState;
             masses[0] = states[0].inverseMass;
             inertias[0] = new Matrix3();
-            inertias[0].SetDiagVector(states[0].inverseInertiaTensor);
+            inertias[0].SetDiagonal(states[0].inverseInertiaTensor);
 
             if (c.gameObject[1] != null)
             {
                 states[1] = c.gameObject[1].GetComponent<ObjectController>().nextState;
                 masses[1] = states[1].inverseMass;
                 inertias[1] = new Matrix3();
-                inertias[1].SetDiagVector(states[1].inverseInertiaTensor);
+                inertias[1].SetDiagonal(states[1].inverseInertiaTensor);
             }
 
             ContactResolver.ResolveCollision(c, masses, inertias, ref velocityChange, ref rotationChange);
@@ -332,8 +332,8 @@ namespace Assets.Scripts.Collisions
             if (controller.IsAnimated && states[0].inverseMass > 0f && states[0].mass > 0)
             {
                 body[0] = c.gameObject[0].GetComponent<Rigidbody>();
-                body[0].velocity += (velocityChange[0] * states[0].inverseMass);
-                body[0].angularVelocity += (inertias[0].Transform(rotationChange[0]));
+                body[0].velocity += (velocityChange[0]);// * states[0].inverseMass);
+                body[0].angularVelocity += rotationChange[0];// (inertias[0].TransformTranspose(rotationChange[0]));
             }
 
             controller = c.gameObject[1].GetComponent<ObjectController>();
@@ -341,8 +341,8 @@ namespace Assets.Scripts.Collisions
             if (controller.IsAnimated && states[1] != null && states[1].inverseMass > 0f && states[1].mass > 0)
             {
                 body[1] = c.gameObject[1].GetComponent<Rigidbody>();
-                body[1].velocity += (velocityChange[1] * states[1].inverseMass);
-                body[1].angularVelocity += (inertias[1].Transform(rotationChange[1]));
+                body[1].velocity += (velocityChange[1]);// * states[1].inverseMass);
+                body[1].angularVelocity += rotationChange[1];// (inertias[1].TransformTranspose(rotationChange[1]));
             }
         }
     }

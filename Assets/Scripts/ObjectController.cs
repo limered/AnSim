@@ -21,6 +21,7 @@ namespace Assets.Scripts
         public float AngularDamping;
 
         public float Restitution;
+        public float Friction;
 
         public Vector3 CollisionForce;  // public und in unity zu sehen für testing
         public Vector3 CollisionTorque; // public und in unity zu sehen für testing

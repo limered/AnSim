@@ -56,7 +56,7 @@ namespace Assets.Scripts.Collisions
 
             velocity = body.velocity;//state.velocity;
 
-            inverseInertiaTensorLocal.SetDiagVector(state.inverseInertiaTensor);
+            inverseInertiaTensorLocal.SetDiagonal(state.inverseInertiaTensor);
 
             _CalculateDerivedData();
         }

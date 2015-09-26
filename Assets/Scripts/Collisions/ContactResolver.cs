@@ -8,28 +8,94 @@ namespace Assets.Scripts.Collisions
         public static void ResolveCollision(Contact c, float[] m, Matrix3[] invInertia, ref Vector3[] velocityChange, ref Vector3[] rotationChange)
         {
             var objectCount = (c.gameObject[1] != null) ? 2 : 1;
+            Vector3 impulseContact = Vector3.zero;
 
-            float deltaVelocity = 0;
+            // Check Friction
+            float friction = 0f;
+            for (int i = 0; i < 2; i++)
+                friction += c.gameObject[i].GetComponent<ObjectController>().Friction;
+            friction *= 0.5f;
 
-            for (int b = 0; b < objectCount; b++)
+            if (friction <= 0)  // Frictionless contact
             {
-                Vector3 deltaVelWorld = Vector3.Cross(c.relativeContactPosition[b], c.normal);
-                deltaVelWorld = invInertia[b].Transform(deltaVelWorld);
-                deltaVelWorld = Vector3.Cross(deltaVelWorld, c.relativeContactPosition[b]);
+                float deltaVelocity = 0;
+                for (int b = 0; b < objectCount; b++)
+                {
+                    Vector3 deltaVelWorld = Vector3.Cross(c.relativeContactPosition[b], c.normal);
+                    deltaVelWorld = invInertia[b].TransformTranspose(deltaVelWorld);
+                    deltaVelWorld = Vector3.Cross(deltaVelWorld, c.relativeContactPosition[b]);
 
-                deltaVelocity += Vector3.Dot(deltaVelWorld, c.normal);
+                    deltaVelocity += Vector3.Dot(deltaVelWorld, c.normal);
 
-                deltaVelocity += m[b];
+                    deltaVelocity += m[b];
+                }
+
+                impulseContact = new Vector3(c.desiredDeltaVelocity / deltaVelocity, 0, 0);
+            }
+            else
+            {
+                // Take friction into account
+                float inverseMass = 0;
+                Matrix3 deltaVelWorld = new Matrix3(),
+                    impulseToTorque = new Matrix3(),
+                    deltaVelWorld_temp = new Matrix3();
+                for (int i = 0; i < 2; i++)
+                {
+                    inverseMass += m[i];
+
+                    impulseToTorque.SetSkewSymmetric(c.relativeContactPosition[i]);
+
+                    deltaVelWorld_temp = impulseToTorque * invInertia[i];
+                    deltaVelWorld_temp *= impulseToTorque;
+                    deltaVelWorld_temp *= -1;
+
+                    deltaVelWorld += deltaVelWorld_temp;
+                }
+
+                Matrix3 deltaVelocity = c.contactToWorld.Transposed();
+                deltaVelocity *= deltaVelWorld;
+                deltaVelocity *= c.contactToWorld;
+
+                deltaVelocity[0] += inverseMass;
+                deltaVelocity[4] += inverseMass;
+                deltaVelocity[8] += inverseMass;
+
+                Matrix3 impulseMatrix = deltaVelocity.Inverse();
+
+                Vector3 velKill = new Vector3(c.desiredDeltaVelocity,
+                    -c.contactVelocity.y,
+                    -c.contactVelocity.z);
+
+                impulseContact = impulseMatrix.Transform(velKill);
+
+                float planarImpulse = Mathf.Sqrt(impulseContact.y * impulseContact.y + impulseContact.z * impulseContact.z);
+                if(planarImpulse > impulseContact.x * friction)
+                {
+                    planarImpulse = 1f / planarImpulse;
+                    impulseContact.y *= planarImpulse;
+                    impulseContact.z *= planarImpulse;
+
+                    impulseContact.x = deltaVelocity[0, 0] +
+                        deltaVelocity[1, 0] * friction * impulseContact.y +
+                        deltaVelocity[2, 0] * friction * impulseContact.z;
+
+                    impulseContact.x = c.desiredDeltaVelocity / impulseContact.x;
+                    impulseContact.y *= friction * impulseContact.x;
+                    impulseContact.z *= friction * impulseContact.x;
+                }
             }
 
-            var impulseContact = new Vector3(c.desiredDeltaVelocity / deltaVelocity, 0, 0);
-            Vector3 impulse = c.contactToWorld.TransformTranspose(impulseContact);
+            Vector3 impulse = c.contactToWorld.Transform(impulseContact);
 
-            for (int b = 0; b < objectCount; b++)
+            Vector3 impulsiveTorque = Vector3.Cross(c.relativeContactPosition[0], impulse);
+            rotationChange[0] = invInertia[0].TransformTranspose(impulsiveTorque);
+            velocityChange[0] = impulse * m[0];
+
+            if (objectCount > 1)
             {
-                velocityChange[b] = (1 - 2 * b) * impulse * m[b];
-                Vector3 impulsiveTorque = Vector3.Cross((-1 + 2 * b) * impulse, c.relativeContactPosition[b]);
-                rotationChange[b] = invInertia[b].Transform(impulsiveTorque);
+                velocityChange[1] = -impulse * m[1];
+                impulsiveTorque = Vector3.Cross(impulse, c.relativeContactPosition[1]);
+                rotationChange[1] = invInertia[1].TransformTranspose(impulsiveTorque);
             }
         }
 
@@ -56,7 +122,7 @@ namespace Assets.Scripts.Collisions
             for (uint b = 0; b < objectCount; b++)
             {
                 Vector3 angularInertiaWorld = Vector3.Cross(contact.relativeContactPosition[b], contact.normal);
-                angularInertiaWorld = invInertiaWorld[b].Transform(angularInertiaWorld);
+                angularInertiaWorld = invInertiaWorld[b].TransformTranspose(angularInertiaWorld);
                 angularInertiaWorld = Vector3.Cross(angularInertiaWorld, contact.relativeContactPosition[b]);
                 angularInertia[b] = Vector3.Dot(angularInertiaWorld, contact.normal);
 
@@ -101,7 +167,7 @@ namespace Assets.Scripts.Collisions
                 if (angularMove[b] != 0f)
                 {
                     t = Vector3.Cross(contact.relativeContactPosition[b], contact.normal);
-                    rotationDirection[b] = invInertiaWorld[b].Transform(t);
+                    rotationDirection[b] = invInertiaWorld[b].TransformTranspose(t);
 
                     rotationAmount[b] = angularMove[b] / angularInertia[b];
                 }
