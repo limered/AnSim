@@ -163,6 +163,21 @@ namespace Assets.Scripts.Collisions
             desiredDeltaVelocity = -contactVelocity.x - restitution * (contactVelocity.x - velocityFromAcc);
         }
 
+        public void MatchAwakeState()
+        {
+            ObjectController body0 = gameObject[0].GetComponent<ObjectController>(),
+                            body1 = gameObject[1].GetComponent<ObjectController>();
+
+            bool body0Awake = body0.isAwake;
+            bool body1Awake = body1.isAwake;
+
+            if (body0Awake ^ body1Awake)
+            {
+                if (body0Awake) body1.SetAwake(true);
+                else body0.SetAwake(true);
+            }
+        }
+
         /************************ not used atm. *************************/
 
         public void Update(Vector3 point, float depth)

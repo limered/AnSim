@@ -15,20 +15,22 @@ namespace Assets.Scripts
 
         void Update() {
             var render = GetComponent<MeshRenderer>();
-            if (Time.realtimeSinceStartup - startTime > maxTime) render.material.color = baseCol;
+            if (!isAwake) render.material.color = baseCol;//Time.realtimeSinceStartup - startTime > maxTime)
             else
             {
-                var time = Time.realtimeSinceStartup - startTime;
-                var percent = time * maxTimeInv;
+                //var time = Time.realtimeSinceStartup - startTime;
+                //var percent = time * maxTimeInv;
 
-                var diff = baseCol - currentColor;
-                diff = diff * percent;
+                //var diff = baseCol - currentColor;
+                //diff = diff * percent;
 
-                currentColor += diff;
+                //currentColor += diff;
 
                 render.material.color = currentColor;
             }
 
+            if (!isAwake) return;
+            
             Vector3 force = Vector3.zero;
             LinearForces(ref force);
 
@@ -39,6 +41,8 @@ namespace Assets.Scripts
             GetComponent<Rigidbody>().AddTorque(torque);
 
             lastFrameAcceleration = force * nextState.inverseMass;
+
+            UpdateMotion();
         }
 
         public void ChangeColor(float time)

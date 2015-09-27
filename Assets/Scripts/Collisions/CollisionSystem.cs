@@ -29,12 +29,15 @@ namespace Assets.Scripts.Collisions
             for (var i = 0; i < cubes.Count; i++)
             {
                 cube0 = cubes[i];
-                WallCollisionSolver.CollideWithWalls(ref cube0, Walls);
+
+                if(cube0.GetComponent<ObjectController>().isAwake)
+                    WallCollisionSolver.CollideWithWalls(ref cube0, Walls);
 
                 for (var j = 0; j < cubes.Count; j++)
                 {
                     cube1 = cubes[j];
                     if (cube0 == cube1) continue;
+                    if (!cube0.GetComponent<ObjectController>().isAwake && !cube1.GetComponent<ObjectController>().isAwake) continue;
                     var collision = _Collide(cube0, cube1, dt);
                     if (collision)
                     {
@@ -49,15 +52,29 @@ namespace Assets.Scripts.Collisions
 
         private void _ChangeColor(GameObject cube0, GameObject cube1)
         {
-            var script = cube0.GetComponent<SmallCubeController>();
-            if (script != null)
+            var script0 = cube0.GetComponent<SmallCubeController>();
+            var script1 = cube1.GetComponent<SmallCubeController>();
+            if (script0 != null)
             {
-                script.ChangeColor(Time.realtimeSinceStartup);
+                script0.ChangeColor(Time.realtimeSinceStartup);
             }
-            script = cube1.GetComponent<SmallCubeController>();
-            if (script != null)
+            
+            if (script1 != null)
             {
-                script.ChangeColor(Time.realtimeSinceStartup);
+                script1.ChangeColor(Time.realtimeSinceStartup);
+            }
+
+            // Awake state
+            var script2 = cube0.GetComponent<ObjectController>();
+            var script3 = cube1.GetComponent<ObjectController>();
+
+            bool body0Awake = script2.isAwake;
+            bool body1Awake = script3.isAwake;
+
+            if (body0Awake ^ body1Awake)
+            {
+                if (body0Awake) script3.SetAwake(true);
+                else script2.SetAwake(true);
             }
         }
 
@@ -130,6 +147,8 @@ namespace Assets.Scripts.Collisions
                 }
                 if (index == -1) break;
 
+                coll.contacts[index].MatchAwakeState();
+
                 ResolveOverlap(coll.contacts[index], ref positionChange, ref rotationChange, ref rotationAngle);
 
                 UpdatePenetrations(coll.contacts, index, ref positionChange, ref rotationChange, ref rotationAngle);
@@ -153,6 +172,8 @@ namespace Assets.Scripts.Collisions
                     }
                 }
                 if (index == -1) break;
+
+                coll.contacts[index].MatchAwakeState();
 
                 ResolveCollision(coll.contacts[index], ref velocityChange, ref rotationChange);
 

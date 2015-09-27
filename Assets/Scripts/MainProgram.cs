@@ -24,24 +24,21 @@ namespace Assets.Scripts
         private RenderingSystem _rendering = new RenderingSystem();
         public static float _timeStep = 0.02f;
 
+        public static float SLEEP_EPSILON = 5f;
+
         // Use this for initialization
         private void Start()
         {
             InstantiateSmallCubes(
-                -10, 5,
-                1.1f, 5, 
-                -11, 5, 
-                1.6f);
+                -20, 15,
+                0.5f, 1, 
+                -20, 15, 
+                3f);
             //AddWallsToInstancesList();
             _AddPlayer();
         }
 
-        /// <summary>
-        /// Instantiates all small cubes.
-        /// </summary>
-        /// <param name="min">Minimal position (x and z)</param>
-        /// <param name="max">Maximal position (x and z)</param>
-        /// <param name="stepSize">Sets the desity of small cubes on the ground ((max - min) / step * (max - min) / step, ie: (20 + 20) / 4 * (20 + 20) / 4 = 100 Würfel)</param>
+        
         private void InstantiateSmallCubes(float xStart, int xCount, float yStart, int yCout, float zStart, int zCount, float step)
         {
             for (int x = 0; x < xCount; x++)

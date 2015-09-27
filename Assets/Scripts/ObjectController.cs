@@ -29,6 +29,10 @@ namespace Assets.Scripts
         public Vector3 accumulatedForce;
         public Vector3 lastFrameAcceleration;
 
+        public bool isAwake;
+        public bool canSleep;
+        public float motion;
+
 
         /// <summary>
         /// Instantiates physics and collision components of this object.
@@ -101,6 +105,44 @@ namespace Assets.Scripts
             var tempVel = GetComponent<Rigidbody>().angularVelocity;
 
             torque += -AngularDamping * tempVel;//nextState.angularVelocity * nextState.mass;
+        }
+
+        public void SetAwake(bool awake)
+        {
+            if (awake)
+            {
+                isAwake = true;
+                GetComponent<Rigidbody>().WakeUp();
+                motion = MainProgram.SLEEP_EPSILON * 2f;
+            }
+            else if(canSleep)
+            {
+                isAwake = false;
+                nextState.velocity = Vector3.zero;
+                nextState.angularVelocity = Vector3.zero;
+
+                lastState.velocity = Vector3.zero;
+                lastState.angularVelocity = Vector3.zero;
+
+                GetComponent<Rigidbody>().Sleep();//  .velocity = Vector3.zero;
+                //GetComponent<Rigidbody>().angularVelocity = Vector3.zero;
+
+                
+            }
+        }
+
+        public void UpdateMotion()
+        {
+            var body = GetComponent<Rigidbody>();
+            var currentMotion = Vector3.Dot(body.velocity, body.velocity) + Vector3.Dot(body.angularVelocity, body.angularVelocity);
+
+            var bias = Mathf.Pow(0.5f, MainProgram._timeStep);
+
+            motion = bias * motion + (1f - bias) * currentMotion;
+            if (motion > 10 * MainProgram.SLEEP_EPSILON) motion = 10 * MainProgram.SLEEP_EPSILON;
+
+            if (motion < MainProgram.SLEEP_EPSILON)
+                SetAwake(false);
         }
     }
 }

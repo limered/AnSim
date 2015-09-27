@@ -62,6 +62,8 @@ namespace Assets.Scripts
         /// </summary>
         private void Update()
         {
+            if (!isAwake) return;
+
             Vector3 force = Vector3.zero;
             LinearForces(ref force);
 
@@ -73,6 +75,7 @@ namespace Assets.Scripts
 
             lastFrameAcceleration = force * nextState.inverseMass;
 
+            //UpdateMotion();
             //GetComponent<Rigidbody>().AddForce(InputForce());
         }
     }

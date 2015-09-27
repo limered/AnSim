@@ -15,14 +15,17 @@ namespace Assets.Scripts.Physics
 
         public Vector3 velocity { get; set; }           // Calculated velocity of object (m/s)
         public Quaternion spin { get; private set; }            // Quaternion rate of change in orientation.
-        public Vector3 angularVelocity { get; private set; }    // Velocity of Angular change
+        public Vector3 angularVelocity { get; set; }    // Velocity of Angular change
 
         public float mass { get; private set; }                 // Mass of object
         public float inverseMass { get; private set; }
         public Vector3 inertiaTensor { get; private set; }        // Inertia Tensor of object (We use only cubes in physics sim, so only one value)
         public Vector3 inverseInertiaTensor;
 
-        public State(Vector3 startPosition, Quaternion startOriantation, float mass, Vector3 inertiaTensor) {
+        public float motion;
+
+        public State(Vector3 startPosition, Quaternion startOriantation, float mass, Vector3 inertiaTensor)
+        {
             position = startPosition;
             orientation = startOriantation;
             this.mass = mass;
@@ -54,7 +57,8 @@ namespace Assets.Scripts.Physics
         /// Generates a exact clone of this instance.
         /// </summary>
         /// <returns>A replicated state instance</returns>
-        public State Clone() {
+        public State Clone()
+        {
             var clone = new State(position, orientation, mass, inertiaTensor);
             clone.momentum = momentum;
             clone.angularMomentum = angularMomentum;
