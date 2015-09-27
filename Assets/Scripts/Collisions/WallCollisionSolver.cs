@@ -13,7 +13,9 @@ namespace Assets.Scripts.Collisions
         public static float k = 100f;
         public static float b = 5f;
 
-        public static float overlapElasticity = 0.2f;
+        public static float overlapElasticity = 1f;
+
+        public static bool forceBased = true;
 
         public static bool isWater = false;
 
@@ -43,6 +45,9 @@ namespace Assets.Scripts.Collisions
 
             var wallController = wall.GetComponent<WallController>();
 
+            Matrix3 inertia = new Matrix3();
+            inertia.SetDiagonal(cube.GetComponent<ObjectController>().nextState.inertiaTensor);
+
             Vector3 force = Vector3.zero;
             Vector3 torque = Vector3.zero;
             float maxPenetration = float.MinValue;
@@ -61,8 +66,16 @@ namespace Assets.Scripts.Collisions
                 }
             }
 
-            rigidbody.AddForce(force);
-            rigidbody.AddTorque(torque);
+            if (forceBased)
+            {
+                rigidbody.AddForce(force * cube.GetComponent<ObjectController>().nextState.mass);
+                rigidbody.AddTorque(torque);
+            }
+            else
+            {
+                rigidbody.velocity += force * cube.GetComponent<ObjectController>().nextState.inverseMass;
+                rigidbody.angularVelocity += inertia.Transform(torque);
+            }
 
             if (!isWater && maxPenetration > 0) // correct position
             {

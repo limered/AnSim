@@ -29,13 +29,13 @@ namespace Assets.Scripts
         // Use this for initialization
         private void Start()
         {
-            InstantiateSmallCubes(
-                -20, 15,
-                0.5f, 1, 
-                -20, 15, 
-                3f);
-            //AddWallsToInstancesList();
             _AddPlayer();
+            InstantiateSmallCubes(
+                6, 30,
+                0.6f, 1, 
+                6, 20, 
+                2.5f);
+            //AddWallsToInstancesList();
         }
 
         

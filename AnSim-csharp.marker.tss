@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<ArrayOfTabHighlightState xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <TabHighlightState>
+    <extensions>
+      <string>assets\scripts\collisions\collisionsystem.cs</string>
+    </extensions>
+    <highlightIndex>2</highlightIndex>
+  </TabHighlightState>
+  <TabHighlightState>
+    <extensions>
+      <string>assets\scripts\collisions\contactresolver.cs</string>
+    </extensions>
+    <highlightIndex>2</highlightIndex>
+  </TabHighlightState>
+  <TabHighlightState>
+    <extensions>
+      <string>assets\scripts\mainprogram.cs</string>
+    </extensions>
+    <highlightIndex>3</highlightIndex>
+  </TabHighlightState>
+</ArrayOfTabHighlightState>
