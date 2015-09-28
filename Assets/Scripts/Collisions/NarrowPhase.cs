@@ -89,7 +89,7 @@ namespace Assets.Scripts.Collisions
             int positionIterationsUsed = 0;
             while (positionIterationsUsed < 2)
             {
-                max = 0;//positionEpsilon;
+                max = MainProgram.POSITION_EPSOLON;
                 index = -1;
                 for (i = 0; i < coll.contacts.Count; i++)
                 {
@@ -115,7 +115,7 @@ namespace Assets.Scripts.Collisions
             int velocityIterationsUsed = 0;
             while (velocityIterationsUsed < 2)
             {
-                max = 0;
+                max = MainProgram.VELOCITY_EPSILON;
                 index = -1;
                 for (i = 0; i < coll.contacts.Count; i++)
                 {

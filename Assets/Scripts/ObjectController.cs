@@ -10,6 +10,7 @@ namespace Assets.Scripts
     /// </summary>
     internal abstract class ObjectController : MonoBehaviour
     {
+        public GameObject statics;
 
         public OrientedBox3D anSimCollider;
         public State lastState;

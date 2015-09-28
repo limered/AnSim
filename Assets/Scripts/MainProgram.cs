@@ -25,21 +25,25 @@ namespace Assets.Scripts
         public static float _timeStep = 0.02f;
 
         public static float SLEEP_EPSILON = 5f;
+        public static float POSITION_EPSOLON = 0.0f;
+        public static float VELOCITY_EPSILON = 0.0f;
 
         // Use this for initialization
         private void Start()
         {
+            var statics = GetComponent<Statics>();
             _AddPlayer();
             InstantiateSmallCubes(
-                6, 30,
-                0.6f, 1, 
-                6, 20, 
-                2.5f);
+                statics.BoxesX.x, (int)statics.BoxesX.y,
+                statics.BoxesY.x, (int)statics.BoxesY.y,
+                statics.BoxesZ.x, (int)statics.BoxesZ.y,
+                statics.BoxesDistance,
+                statics.BoxesStartAwake);
             //AddWallsToInstancesList();
         }
 
         
-        private void InstantiateSmallCubes(float xStart, int xCount, float yStart, int yCout, float zStart, int zCount, float step)
+        private void InstantiateSmallCubes(float xStart, int xCount, float yStart, int yCout, float zStart, int zCount, float step, bool startAwake)
         {
             for (int x = 0; x < xCount; x++)
             {
@@ -48,6 +52,8 @@ namespace Assets.Scripts
                     for (int z = 0; z < zCount; z++)
                     {
                         var smallCube = (GameObject)Instantiate(SmallCubePrefab, new Vector3(xStart + x*step, yStart + y*step, zStart + z*step), Quaternion.identity);
+                        if (startAwake)
+                            smallCube.GetComponent<ObjectController>().SetAwake(true);
                         _cubes.Add(smallCube);
                     }
                 }

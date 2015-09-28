@@ -7,25 +7,23 @@ namespace Assets.Scripts.Collisions
     /// </summary>
     internal class WallCollisionSolver
     {
-        public static float c = 10f;
-        public static float f = 3f;
+        private float c;
+        private float f;
+        private float k;
+        private float b;
+        private float elasticity;
+        private bool isWater;
 
-        public static float k = 100f;
-        public static float b = 5f;
-
-        public static float overlapElasticity = 1f;
-
-        public static bool forceBased = true;
-
-        public static bool isWater = false;
 
         /// <summary>
         /// Starts collision detection with all five walls.
         /// </summary>
         /// <param name="cube"> Cube to collide </param>
         /// <param name="walls"> Array containing all walls </param>
-        public static void CollideWithWalls(ref GameObject cube, GameObject[] walls)
+        public void CollideWithWalls(ref GameObject cube, GameObject[] walls)
         {
+            _SetVariables(walls[0]);
+
             for (int i = 0; i < walls.Length; i++)
             {
                 _CollideCubeWithWall(ref cube, walls[i]);
@@ -33,11 +31,26 @@ namespace Assets.Scripts.Collisions
         }
 
         /// <summary>
+        /// Sets the needed variables for calculation
+        /// </summary>
+        /// <param name="wall"></param>
+        private void _SetVariables(GameObject wall)
+        {
+            var statics = wall.GetComponent<ObjectController>().statics.GetComponent<Statics>();
+            c = statics.WallBounce;
+            f = statics.WallFriction;
+            k = statics.WallPenetrationPenalty;
+            b = statics.WallPenetrationDamping;
+            elasticity = statics.WallElastic;
+            isWater = statics.WallIsWater;
+        }
+
+        /// <summary>
         /// Lets a cube collide with a wall/floor
         /// </summary>
         /// <param name="cube"></param>
         /// <param name="wall"></param>
-        private static void _CollideCubeWithWall(ref GameObject cube, GameObject wall)
+        private void _CollideCubeWithWall(ref GameObject cube, GameObject wall)
         {
             var position = cube.GetComponent<Transform>().position;
             var collision = cube.GetComponent<ObjectController>().anSimCollider;
@@ -66,20 +79,16 @@ namespace Assets.Scripts.Collisions
                 }
             }
 
-            if (forceBased)
+            if (!isWater && maxPenetration > 0) // correct position
             {
+                cube.GetComponent<Transform>().position += wallController.normal * maxPenetration * elasticity;
                 rigidbody.AddForce(force * cube.GetComponent<ObjectController>().nextState.mass);
                 rigidbody.AddTorque(torque);
             }
             else
             {
-                rigidbody.velocity += force * cube.GetComponent<ObjectController>().nextState.inverseMass;
-                rigidbody.angularVelocity += inertia.Transform(torque);
-            }
-
-            if (!isWater && maxPenetration > 0) // correct position
-            {
-                cube.GetComponent<Transform>().position += wallController.normal * maxPenetration * overlapElasticity;
+                rigidbody.AddForce(force);
+                rigidbody.AddTorque(torque);
             }
         }
 
@@ -94,7 +103,7 @@ namespace Assets.Scripts.Collisions
         /// <param name="force">parameter to accumulate forces </param>
         /// <param name="torque">parameter to accumulate torque</param>
         /// <param name="maxPenetration"> maximal penetration depth to force the cube out of the plane </param>
-        private static void _CollidePointWithPlane(Vector3 p, Vector3 center, Vector3 aV, Vector3 v, WallController plane, ref Vector3 force, ref Vector3 torque, ref float maxPenetration)
+        private void _CollidePointWithPlane(Vector3 p, Vector3 center, Vector3 aV, Vector3 v, WallController plane, ref Vector3 force, ref Vector3 torque, ref float maxPenetration)
         {
             //Penetration of point into plane
             float penetration = plane.wallConstant - Vector3.Dot(p, plane.normal);
