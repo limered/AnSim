@@ -129,7 +129,7 @@ namespace Assets.Scripts.Collisions
         private Vector3 _CalculateLocalVelocity(Vector3 rot, Vector3 vel, Vector3 relativeContactPos, Vector3 lastFrameVelocity)
         {
             Vector3 contactVelocity = contactToWorld.TransformTranspose(Vector3.Cross(rot, relativeContactPos) + vel);
-            Vector3 accVelocity = lastFrameVelocity * MainProgram._timeStep;
+            Vector3 accVelocity = lastFrameVelocity * MainProgram.TIMESTEP;
             accVelocity = contactToWorld.TransformTranspose(accVelocity);
             accVelocity.x = 0;
             contactVelocity += accVelocity;
@@ -144,13 +144,13 @@ namespace Assets.Scripts.Collisions
             float velocityLimit = 0.25f;
 
             var controller = gameObject[0].GetComponent<ObjectController>();
-            float velocityFromAcc = Vector3.Dot(controller.lastFrameAcceleration * MainProgram._timeStep, normal);
+            float velocityFromAcc = Vector3.Dot(controller.lastFrameAcceleration * MainProgram.TIMESTEP, normal);
 
             var restitution = controller.Restitution;
             if (gameObject[1] != null)
             {
                 controller = gameObject[1].GetComponent<ObjectController>();
-                velocityFromAcc -= Vector3.Dot(controller.lastFrameAcceleration * MainProgram._timeStep, normal);
+                velocityFromAcc -= Vector3.Dot(controller.lastFrameAcceleration * MainProgram.TIMESTEP, normal);
                 restitution += controller.Restitution;
             }
 
@@ -163,6 +163,9 @@ namespace Assets.Scripts.Collisions
             desiredDeltaVelocity = -contactVelocity.x - restitution * (contactVelocity.x - velocityFromAcc);
         }
 
+        /// <summary>
+        /// If one collision object is awake, this matches the state to the other (only way of an object to become awake again)
+        /// </summary>
         public void MatchAwakeState()
         {
             ObjectController body0 = gameObject[0].GetComponent<ObjectController>(),
@@ -178,7 +181,7 @@ namespace Assets.Scripts.Collisions
             }
         }
 
-        /************************ not used atm. *************************/
+        /************************ not used atm. Caching of contacts *************************/
 
         public void Update(Vector3 point, float depth)
         {

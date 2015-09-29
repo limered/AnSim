@@ -4,7 +4,14 @@ namespace Assets.Scripts.Collisions
 {
     internal class ContactResolver
     {
-
+        /// <summary>
+        /// Resolves collision velocities of two onjects in a collision point
+        /// </summary>
+        /// <param name="c"> Collision point </param>
+        /// <param name="m"> inverse masses of objects </param>
+        /// <param name="invInertia"> inverse inertia of objects </param>
+        /// <param name="velocityChange"></param>
+        /// <param name="rotationChange"></param>
         public static void ResolveCollision(Contact c, float[] m, Matrix3[] invInertia, ref Vector3[] velocityChange, ref Vector3[] rotationChange)
         {
             var objectCount = (c.gameObject[1] != null) ? 2 : 1;
@@ -69,7 +76,7 @@ namespace Assets.Scripts.Collisions
                 impulseContact = impulseMatrix.Transform(velKill);
 
                 float planarImpulse = Mathf.Sqrt(impulseContact.y * impulseContact.y + impulseContact.z * impulseContact.z);
-                if(planarImpulse > impulseContact.x * friction)
+                if (planarImpulse > impulseContact.x * friction)
                 {
                     planarImpulse = 1f / planarImpulse;
                     impulseContact.y *= planarImpulse;

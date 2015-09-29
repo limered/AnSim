@@ -14,7 +14,6 @@ namespace Assets.Scripts.Collisions
         private float elasticity;
         private bool isWater;
 
-
         /// <summary>
         /// Starts collision detection with all five walls.
         /// </summary>
@@ -36,7 +35,7 @@ namespace Assets.Scripts.Collisions
         /// <param name="wall"></param>
         private void _SetVariables(GameObject wall)
         {
-            var statics = wall.GetComponent<ObjectController>().statics.GetComponent<Statics>();
+            var statics = wall.GetComponent<ObjectController>().program.GetComponent<Statics>();
             c = statics.WallBounce;
             f = statics.WallFriction;
             k = statics.WallPenetrationPenalty;

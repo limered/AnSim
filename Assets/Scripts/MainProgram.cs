@@ -8,27 +8,76 @@ namespace Assets.Scripts
 {
     public class MainProgram : MonoBehaviour
     {
+        public static float TIMESTEP = 0.02f;
+        static public float GRAVITY = -9.8f;
+
+        public static float POSITION_EPSOLON = 0.1f;
+        public static float SLEEP_EPSILON = 5f;
+        public static float VELOCITY_EPSILON = 0.1f;
+
         public GameObject BigCubePrefab;
         public Camera MainCamera;
         public GameObject SmallCubePrefab;
         public GameObject[] Walls;
-
-        static public float GravityConstant = -9.8f;
-
-        static public bool isWater = false;
 
         private float _accumulator = 0;
         private CollisionSystem _collisions = new CollisionSystem();
         private List<GameObject> _cubes = new List<GameObject>();
         private PhysicsSystem _physics = new PhysicsSystem();
         private RenderingSystem _rendering = new RenderingSystem();
-        public static float _timeStep = 0.02f;
 
-        public static float SLEEP_EPSILON = 5f;
-        public static float POSITION_EPSOLON = 0.0f;
-        public static float VELOCITY_EPSILON = 0.0f;
+        /// <summary>
+        /// Adds the Player Cube to the cubes list
+        /// </summary>
+        private void _AddPlayer()
+        {
+            var playerCube = GameObject.Find("BigCube");
+            _cubes.Add(playerCube);
+        }
 
-        // Use this for initialization
+        /// <summary>
+        /// Adds all the Wall object to list of instances
+        /// </summary>
+        private void AddWallsToInstancesList()
+        {
+            for (int i = 0; i < Walls.Length; i++)
+            {
+                _cubes.Add(Walls[i]);
+            }
+        }
+
+        /// <summary>
+        /// Builds all small cube objects
+        /// </summary>
+        /// <param name="xStart"> start position in x direction </param>
+        /// <param name="xCount"> count in x direction </param>
+        /// <param name="yStart"></param>
+        /// <param name="yCout"></param>
+        /// <param name="zStart"></param>
+        /// <param name="zCount"></param>
+        /// <param name="step"> distance between cube centers </param>
+        /// <param name="startAwake"> if the cubes should start awake </param>
+        private void InstantiateSmallCubes(float xStart, int xCount, float yStart, int yCout, float zStart, int zCount, float step, bool startAwake)
+        {
+            for (int x = 0; x < xCount; x++)
+            {
+                for (int y = 0; y < yCout; y++)
+                {
+                    for (int z = 0; z < zCount; z++)
+                    {
+                        var smallCube = (GameObject)Instantiate(SmallCubePrefab, new Vector3(xStart + x * step, yStart + y * step, zStart + z * step), Quaternion.identity);
+                        smallCube.GetComponent<ObjectController>().program = gameObject;
+                        if (startAwake)
+                            smallCube.GetComponent<ObjectController>().SetAwake(true);
+                        _cubes.Add(smallCube);
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Starts simulation
+        /// </summary>
         private void Start()
         {
             var statics = GetComponent<Statics>();
@@ -39,48 +88,6 @@ namespace Assets.Scripts
                 statics.BoxesZ.x, (int)statics.BoxesZ.y,
                 statics.BoxesDistance,
                 statics.BoxesStartAwake);
-            //AddWallsToInstancesList();
-        }
-
-        
-        private void InstantiateSmallCubes(float xStart, int xCount, float yStart, int yCout, float zStart, int zCount, float step, bool startAwake)
-        {
-            for (int x = 0; x < xCount; x++)
-            {
-                for (int y = 0; y < yCout; y++)
-                {
-                    for (int z = 0; z < zCount; z++)
-                    {
-                        var smallCube = (GameObject)Instantiate(SmallCubePrefab, new Vector3(xStart + x*step, yStart + y*step, zStart + z*step), Quaternion.identity);
-                        if (startAwake)
-                            smallCube.GetComponent<ObjectController>().SetAwake(true);
-                        _cubes.Add(smallCube);
-                    }
-                }
-            }
-        }
-
-        /// <summary>
-        /// Adds all the Wall object to list of instances
-        /// </summary>
-        private void AddWallsToInstancesList()
-        {
-            for (int i = 0; i < Walls.Length; i++)
-            {
-                //var wallC = Walls[i].GetComponent<ObjectController>();
-                //wallC.anSimCollider.UpdateDataFromObject(Walls[i]);
-                _cubes.Add(Walls[i]);
-            }
-        }
-
-        private void _AddPlayer()
-        {
-            var playerCube = GameObject.Find("BigCube");
-            _cubes.Add(playerCube);
-
-            //var smallCube = GameObject.Find("SmallCube");
-            //_cubes.Add(smallCube);
-
         }
 
         /// <summary>
@@ -92,15 +99,15 @@ namespace Assets.Scripts
             dt = (dt >= 0.0333333333333333f) ? 0.0333333333333333f : dt;
             _accumulator += dt;
 
-            while (_accumulator > _timeStep)
+            while (_accumulator > TIMESTEP)
             {
-                _collisions.CalculateCollisions(_timeStep, _cubes, Walls);
-                _physics.IntegratePhysics(_timeStep, _cubes);
+                _collisions.CalculateCollisions(TIMESTEP, _cubes, Walls);
+                _physics.IntegratePhysics(TIMESTEP, _cubes);
 
-                _accumulator -= _timeStep;
+                _accumulator -= TIMESTEP;
             }
 
-            var alpha = _accumulator / _timeStep;
+            var alpha = _accumulator / TIMESTEP;
             _rendering.LateUpdate(alpha, _cubes);
 
             //Eventuell die Kamera hier bewegen um den würfel zu verfolgen? TODO

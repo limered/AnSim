@@ -5,7 +5,7 @@
       <string>c:\users\livei\documents\githubvisualstudio\ansim\assets\scripts\physics\state.cs</string>
     </ArrayOfString>
     <ArrayOfString>
-      <string>C:\Users\livei\Documents\GitHubVisualStudio\AnSim\Assets\Scripts\MainProgram.cs</string>
+      <string>c:\users\livei\documents\githubvisualstudio\ansim\assets\scripts\mainprogram.cs</string>
     </ArrayOfString>
     <ArrayOfString>
       <string>c:\users\livei\documents\githubvisualstudio\ansim\assets\scripts\objectcontroller.cs</string>
@@ -33,9 +33,6 @@
     </ArrayOfString>
     <ArrayOfString>
       <string>c:\users\livei\documents\githubvisualstudio\ansim\assets\scripts\collisions\narrowphase.cs</string>
-    </ArrayOfString>
-    <ArrayOfString>
-      <string>c:\users\livei\documents\githubvisualstudio\ansim\assets\scripts\collisions\wallcollisionsolver.cs</string>
     </ArrayOfString>
     <ArrayOfString>
       <string>C:\Users\livei\Documents\GitHubVisualStudio\AnSim\Assets\Scripts\Statics.cs</string>

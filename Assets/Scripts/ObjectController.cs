@@ -1,7 +1,6 @@
-﻿using UnityEngine;
-using System.Collections;
+﻿using Assets.Scripts.Collisions;
 using Assets.Scripts.Physics;
-using Assets.Scripts.Collisions;
+using UnityEngine;
 
 namespace Assets.Scripts
 {
@@ -10,7 +9,7 @@ namespace Assets.Scripts
     /// </summary>
     internal abstract class ObjectController : MonoBehaviour
     {
-        public GameObject statics;
+        public GameObject program;
 
         public OrientedBox3D anSimCollider;
         public State lastState;
@@ -26,7 +25,6 @@ namespace Assets.Scripts
 
         public Vector3 CollisionForce;  // public und in unity zu sehen für testing
         public Vector3 CollisionTorque; // public und in unity zu sehen für testing
-
         public Vector3 accumulatedForce;
         public Vector3 lastFrameAcceleration;
 
@@ -34,18 +32,43 @@ namespace Assets.Scripts
         public bool canSleep;
         public float motion;
 
+        public bool isPlayer;
 
         /// <summary>
         /// Instantiates physics and collision components of this object.
         /// </summary>
-        void Start()
+        private void Start()
         {
+            if (isPlayer)
+            {
+                var stat = program.GetComponent<Statics>();
+                Mass = stat.PlayerMass;
+                LinearDamping = stat.PlayerLinearDamping;
+                AngularDamping = stat.PlayerAngularDamping;
+                Restitution = stat.PlayerBounce;
+                Friction = stat.PlayerFriction;
+                canSleep = stat.PlayerCanSleep;
+                ((BigCubeController)this).MovementSpeed = stat.PlayerSpeed;
+            }
+            else
+            {
+                var stat = program.GetComponent<Statics>();
+                Mass = stat.BoxesMass;
+                LinearDamping = stat.BoxesLinearDamping;
+                AngularDamping = stat.BoxesAngularDamping;
+                Restitution = stat.BoxesBounce;
+                Friction = stat.BoxesFriction;
+                canSleep = stat.BoxesCanSleep;
+            }
+
             Mass = (Mass <= 0) ? 1 : Mass;
+
             var transform = GetComponent<Transform>();
             Vector3 inertiaTensor = new Vector3(Mass * (transform.localScale.y * transform.localScale.y + transform.localScale.z * transform.localScale.z / 12),
                 Mass * (transform.localScale.x * transform.localScale.x + transform.localScale.z * transform.localScale.z / 12),
                 Mass * (transform.localScale.x * transform.localScale.x + transform.localScale.y * transform.localScale.y / 12));
-            lastState = new State(transform.position, transform.rotation, Mass, inertiaTensor); //TODO Inertia Tensor aus Größe/Scale berechnen
+
+            lastState = new State(transform.position, transform.rotation, Mass, inertiaTensor);
             nextState = lastState.Clone();
             anSimCollider = new OrientedBox3D();
             anSimCollider.UpdateDataFromObject(gameObject);
@@ -83,15 +106,15 @@ namespace Assets.Scripts
         /// <param name="force"> Container for force calculation </param>
         public void Gravity(ref Vector3 force)
         {
-            force.y += MainProgram.GravityConstant * nextState.mass;
+            force.y += MainProgram.GRAVITY * nextState.mass;
         }
 
         /// <summary>
         /// Adds a force for damping of linear movement of this object (i.e. Reibung der Luft)
         /// </summary>
         /// <param name="force"> Container for force calculation </param>
-        public virtual void MovementDamping(ref Vector3 force) {
-
+        public virtual void MovementDamping(ref Vector3 force)
+        {
             var tempVel = GetComponent<Rigidbody>().velocity;
 
             force += -LinearDamping * tempVel;//nextState.velocity;
@@ -108,40 +131,48 @@ namespace Assets.Scripts
             torque += -AngularDamping * tempVel;//nextState.angularVelocity * nextState.mass;
         }
 
+        /// <summary>
+        /// Sets this object alive or not.
+        /// </summary>
+        /// <param name="awake"> awake or not </param>
         public void SetAwake(bool awake)
         {
             if (awake)
             {
                 isAwake = true;
-                GetComponent<Rigidbody>().WakeUp();
-                motion = MainProgram.SLEEP_EPSILON * 2f;
+                GetComponent<Rigidbody>().WakeUp(); //Temp
+                motion = MainProgram.SLEEP_EPSILON * 2f;    // Set motion to 2*Sleep epsilos, so it doesn't sleep again instantly
             }
-            else if(canSleep)
+            else if (canSleep)
             {
                 isAwake = false;
+                // Clear states, so it doesn't move anymore
                 nextState.velocity = Vector3.zero;
                 nextState.angularVelocity = Vector3.zero;
-
                 lastState.velocity = Vector3.zero;
                 lastState.angularVelocity = Vector3.zero;
 
-                GetComponent<Rigidbody>().Sleep();//  .velocity = Vector3.zero;
-                //GetComponent<Rigidbody>().angularVelocity = Vector3.zero;
-
-                
+                // Temp for uniry
+                GetComponent<Rigidbody>().Sleep(); //temp //  .velocity = Vector3.zero;
+                                                   //GetComponent<Rigidbody>().angularVelocity = Vector3.zero;
             }
         }
 
+        /// <summary>
+        /// Updates the motion variable and determines if this object should sleep
+        /// </summary>
         public void UpdateMotion()
         {
-            var body = GetComponent<Rigidbody>();
+            var body = GetComponent<Rigidbody>();   // Temp
             var currentMotion = Vector3.Dot(body.velocity, body.velocity) + Vector3.Dot(body.angularVelocity, body.angularVelocity);
 
-            var bias = Mathf.Pow(0.5f, MainProgram._timeStep);
+            var bias = Mathf.Pow(0.5f, MainProgram.TIMESTEP);
 
-            motion = bias * motion + (1f - bias) * currentMotion;
-            if (motion > 10 * MainProgram.SLEEP_EPSILON) motion = 10 * MainProgram.SLEEP_EPSILON;
+            motion = bias * motion + (1f - bias) * currentMotion;   // Durchschnitt über die letzten bewegungszahnel
 
+            if (motion > 10 * MainProgram.SLEEP_EPSILON) motion = 10 * MainProgram.SLEEP_EPSILON;   // Begrenze bewegung nach oben
+
+            // CHeck if should sleep
             if (motion < MainProgram.SLEEP_EPSILON)
                 SetAwake(false);
         }

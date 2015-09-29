@@ -16,5 +16,20 @@ namespace Assets.Scripts
         public Vector2 BoxesZ;
         public float BoxesDistance;             // Distance between boxes
         public bool BoxesStartAwake;            // If boxes are awake on start
+
+        public float BoxesMass;
+        public float BoxesLinearDamping;
+        public float BoxesAngularDamping;
+        public float BoxesBounce;
+        public float BoxesFriction;
+        public bool BoxesCanSleep;
+
+        public float PlayerMass;
+        public float PlayerLinearDamping;
+        public float PlayerAngularDamping;
+        public float PlayerBounce;
+        public float PlayerFriction;
+        public bool PlayerCanSleep;
+        public float PlayerSpeed;
     }
 }

@@ -3,6 +3,9 @@ using UnityEngine;
 
 namespace Assets.Scripts.Collisions
 {
+    /// <summary>
+    ///  A 3d Grid to house all collisions
+    /// </summary>
     internal class SpatialGrid
     {
         private int W, B, H, total;
@@ -36,6 +39,9 @@ namespace Assets.Scripts.Collisions
             knownCollisions = new Dictionary<string, bool>();
         }
 
+        /// <summary>
+        /// Clears all needed variables from last calculation
+        /// </summary>
         public void Setup()
         {
             allColumns = new List<GameObject>[W, H, B];
@@ -43,6 +49,10 @@ namespace Assets.Scripts.Collisions
             knownCollisions = new Dictionary<string, bool>();
         }
 
+        /// <summary>
+        /// Inserts an object in the correct cells. An object can be in more than one cell.
+        /// </summary>
+        /// <param name="entity"></param>
         public void InsertEntity(GameObject entity)
         {
             var collider = entity.GetComponent<ObjectController>().anSimCollider;
@@ -58,7 +68,7 @@ namespace Assets.Scripts.Collisions
             maxY = (int)(_ProjectPosition(Vector3.up, collider, 1) * cellSizeYInv);
             maxZ = (int)(_ProjectPosition(Vector3.forward, collider, 1) * cellSizeZInv);
 
-            // make sure all is in bounds
+            // make sure all is in bounds and min <= max
             if (maxX < minX) { var temp = maxX; maxX = minX; minX = temp; }
             if (maxY < minY) { var temp = maxY; maxY = minY; minY = temp; }
             if (maxZ < minZ) { var temp = maxZ; maxZ = minZ; minZ = temp; }
@@ -84,6 +94,10 @@ namespace Assets.Scripts.Collisions
             }
         }
 
+        /// <summary>
+        /// Checks if there are possible collision in a cell and returns candidate pairs for collisions.
+        /// </summary>
+        /// <returns> A List of pairs of enzities that could collide </returns>
         public List<GameObject[]> CollideAll()
         {
             List<GameObject[]> pairs = new List<GameObject[]>();
@@ -123,6 +137,13 @@ namespace Assets.Scripts.Collisions
             return pairs;
         }
 
+        /// <summary>
+        /// Projects the extends of an object onto a axis in one particular direction.
+        /// </summary>
+        /// <param name="axis"> Axis to project on </param>
+        /// <param name="collider"> objects collider </param>
+        /// <param name="sign"> direction(1/-1) </param>
+        /// <returns> projected t on axis </returns>
         private float _ProjectPosition(Vector3 axis, OrientedBox3D collider, int sign)
         {
             var x = Vector3.Dot(axis, collider.axis[0] * sign * collider.extents[0]);

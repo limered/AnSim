@@ -13,11 +13,11 @@ namespace Assets.Scripts.Collisions
             Dictionary<int, GameObject> moved = new Dictionary<int, GameObject>();
 
             GameObject cube0, cube1;
-            for(int i = 0; i < pairs.Count; i++)
+            for (int i = 0; i < pairs.Count; i++)
             {
                 cube0 = pairs[i][0];
                 cube1 = pairs[i][1];
-                var collision = _Collide(cube0, cube1, MainProgram._timeStep);
+                var collision = _Collide(cube0, cube1, MainProgram.TIMESTEP);
                 if (collision)
                 {
                     ContactGenerator.ComputeCollisionInfo(ref coll);
@@ -60,19 +60,20 @@ namespace Assets.Scripts.Collisions
             return CollisionSolver.EdgesIntersect(ref coll);
         }
 
-        private bool _DynamicCollision()
-        {
-            var mag = coll.relativeVelocity.sqrMagnitude;
-            if (coll.relativeVelocity.sqrMagnitude > Vector3.kEpsilon)
-                if (CollisionSolver.IntervalIntersectTime(ref coll))
-                {
-                    ContactGenerator.FindDynamicPoint(ref coll);
-                }
-            return false;
-        }
+        // Not used
+        //private bool _DynamicCollision()
+        //{
+        //    var mag = coll.relativeVelocity.sqrMagnitude;
+        //    if (coll.relativeVelocity.sqrMagnitude > Vector3.kEpsilon)
+        //        if (CollisionSolver.IntervalIntersectTime(ref coll))
+        //        {
+        //            ContactGenerator.FindDynamicPoint(ref coll);
+        //        }
+        //    return false;
+        //}
 
         /// <summary>
-        /// divides the two cubes and add forces
+        /// Seperates the two cubes and add forces
         /// </summary>
         /// <param name="a"></param>
         /// <param name="b"></param>
@@ -189,6 +190,13 @@ namespace Assets.Scripts.Collisions
             }
         }
 
+        /// <summary>
+        /// Updates the relative Velocities in all point after a separation of one point
+        /// </summary>
+        /// <param name="c"> List of Contact points </param>
+        /// <param name="index"> index of the last corrected contact </param>
+        /// <param name="velocityChange"> last/future velocity change of object </param>
+        /// <param name="rotationChange"> last/future rotational velocity change of object </param>
         private void UpdatePenetrationsVel(List<Contact> c, int index, ref Vector3[] velocityChange, ref Vector3[] rotationChange)
         {
             Vector3 cp;
@@ -280,6 +288,12 @@ namespace Assets.Scripts.Collisions
             }
         }
 
+        /// <summary>
+        /// Resolves the collision of two objects
+        /// </summary>
+        /// <param name="c"></param>
+        /// <param name="velocityChange"></param>
+        /// <param name="rotationChange"></param>
         private void ResolveCollision(Contact c, ref Vector3[] velocityChange, ref Vector3[] rotationChange)
         {
             State[] states = new State[2];

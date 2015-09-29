@@ -32,6 +32,11 @@ namespace Assets.Scripts.Collisions
             }
         }
 
+        /// <summary>
+        /// Collides all awake object with walls
+        /// </summary>
+        /// <param name="cubes"></param>
+        /// <param name="walls"></param>
         private void _CollideWithWalls(List<GameObject> cubes, GameObject[] walls)
         {
             GameObject cube;
@@ -43,6 +48,10 @@ namespace Assets.Scripts.Collisions
             }
         }
 
+        /// <summary>
+        /// Changes the color of object, who were in a collision
+        /// </summary>
+        /// <param name="cube"></param>
         private void _ChangeColor(GameObject cube)
         {
             var script = cube.GetComponent<SmallCubeController>();

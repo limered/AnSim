@@ -74,9 +74,6 @@ namespace Assets.Scripts
             GetComponent<Rigidbody>().AddTorque(torque);
 
             lastFrameAcceleration = force * nextState.inverseMass;
-
-            //UpdateMotion();
-            //GetComponent<Rigidbody>().AddForce(InputForce());
         }
     }
 }
