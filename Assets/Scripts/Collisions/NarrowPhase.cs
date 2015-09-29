@@ -299,7 +299,7 @@ namespace Assets.Scripts.Collisions
             State[] states = new State[2];
             float[] masses = new float[2];
             Matrix3[] inertias = new Matrix3[2];
-            Rigidbody[] body = new Rigidbody[2];
+            //Rigidbody[] body = new Rigidbody[2];
 
             states[0] = c.gameObject[0].GetComponent<ObjectController>().nextState;
             masses[0] = states[0].inverseMass;
@@ -320,18 +320,18 @@ namespace Assets.Scripts.Collisions
 
             if (controller.IsAnimated && states[0].inverseMass > 0f && states[0].mass > 0)
             {
-                body[0] = c.gameObject[0].GetComponent<Rigidbody>();
-                body[0].velocity += (velocityChange[0]);// * states[0].inverseMass);
-                body[0].angularVelocity += rotationChange[0];// (inertias[0].TransformTranspose(rotationChange[0]));
+                //body[0] = c.gameObject[0].GetComponent<Rigidbody>();
+                states[0].velocity += (velocityChange[0]);// * states[0].inverseMass);
+                states[0].angularVelocity += rotationChange[0];// (inertias[0].TransformTranspose(rotationChange[0]));
             }
 
             controller = c.gameObject[1].GetComponent<ObjectController>();
 
             if (controller.IsAnimated && states[1] != null && states[1].inverseMass > 0f && states[1].mass > 0)
             {
-                body[1] = c.gameObject[1].GetComponent<Rigidbody>();
-                body[1].velocity += (velocityChange[1]);// * states[1].inverseMass);
-                body[1].angularVelocity += rotationChange[1];// (inertias[1].TransformTranspose(rotationChange[1]));
+                //body[1] = c.gameObject[1].GetComponent<Rigidbody>();
+                states[1].velocity += (velocityChange[1]);// * states[1].inverseMass);
+                states[1].angularVelocity += rotationChange[1];// (inertias[1].TransformTranspose(rotationChange[1]));
             }
         }
     }

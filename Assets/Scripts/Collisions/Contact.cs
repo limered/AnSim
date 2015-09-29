@@ -108,13 +108,13 @@ namespace Assets.Scripts.Collisions
         /// </summary>
         public void CalculateContactVelocity()
         {
-            var body = gameObject[0].GetComponent<Rigidbody>();
             var controller = gameObject[0].GetComponent<ObjectController>();
+            var body = controller.nextState;
             contactVelocity = _CalculateLocalVelocity(body.angularVelocity, body.velocity, relativeContactPosition[0], controller.lastFrameAcceleration);
             if (gameObject[1])
             {
-                body = gameObject[1].GetComponent<Rigidbody>();
                 controller = gameObject[1].GetComponent<ObjectController>();
+                body = controller.nextState;
                 contactVelocity -= _CalculateLocalVelocity(body.angularVelocity, body.velocity, relativeContactPosition[1], controller.lastFrameAcceleration);
             }
         }

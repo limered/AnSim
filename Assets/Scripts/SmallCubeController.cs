@@ -45,24 +45,29 @@ namespace Assets.Scripts
 
             if (!isAwake) return;
 
+            // Generate forces for next frame
             Vector3 force = Vector3.zero;
             LinearForces(ref force);
 
+            // Generate torque for next frame
             Vector3 torque = Vector3.zero;
             RotationForces(ref torque);
 
-            GetComponent<Rigidbody>().AddForce(force);
-            GetComponent<Rigidbody>().AddTorque(torque);
+            // Add forces to accumulator
+            AddForce(force);
+            AddTorque(torque);
 
-            lastFrameAcceleration = force * nextState.inverseMass;
-
+            // Update sleep state
             UpdateMotion();
         }
 
-        public void ChangeColor(float time)
+        /// <summary>
+        /// Function to call on collision
+        /// </summary>
+        /// <param name="timeStamp"></param>
+        public void OnCollision(float timeStamp)
         {
-            //startTime = time;
-            //currentColor = red;
+            
         }
     }
 }

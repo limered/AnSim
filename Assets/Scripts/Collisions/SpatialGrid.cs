@@ -57,7 +57,7 @@ namespace Assets.Scripts.Collisions
         {
             var collider = entity.GetComponent<ObjectController>().anSimCollider;
             if (collider == null) return;
-            var state = entity.GetComponent<Rigidbody>(); // TODO State
+            var state = entity.GetComponent<ObjectController>().nextState;
             if (state == null) return;
 
             // Get Min Max values

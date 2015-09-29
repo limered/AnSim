@@ -52,13 +52,14 @@ namespace Assets.Scripts.Collisions
         private void _CollideCubeWithWall(ref GameObject cube, GameObject wall)
         {
             var position = cube.GetComponent<Transform>().position;
-            var collision = cube.GetComponent<ObjectController>().anSimCollider;
-            var rigidbody = cube.GetComponent<Rigidbody>();
+            var controller = cube.GetComponent<ObjectController>();
+            var collision = controller.anSimCollider;
+            var rigidbody = controller.nextState;
 
             var wallController = wall.GetComponent<WallController>();
 
             Matrix3 inertia = new Matrix3();
-            inertia.SetDiagonal(cube.GetComponent<ObjectController>().nextState.inertiaTensor);
+            inertia.SetDiagonal(rigidbody.inertiaTensor);
 
             Vector3 force = Vector3.zero;
             Vector3 torque = Vector3.zero;
@@ -78,16 +79,16 @@ namespace Assets.Scripts.Collisions
                 }
             }
 
-            if (!isWater && maxPenetration > 0) // correct position
+            if (!isWater && maxPenetration > 0)
             {
                 cube.GetComponent<Transform>().position += wallController.normal * maxPenetration * elasticity;
-                rigidbody.AddForce(force * cube.GetComponent<ObjectController>().nextState.mass);
-                rigidbody.AddTorque(torque);
+                controller.AddForce(force * rigidbody.mass);
+                controller.AddTorque(torque);
             }
             else
             {
-                rigidbody.AddForce(force);
-                rigidbody.AddTorque(torque);
+                controller.AddForce(force);
+                controller.AddTorque(torque);
             }
         }
 

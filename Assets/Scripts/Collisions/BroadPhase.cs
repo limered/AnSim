@@ -1,14 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 namespace Assets.Scripts.Collisions
 {
     internal class BroadPhase
     {
-        SpatialGrid grid = new SpatialGrid(20, 20, 40, 60, 60, 120);
+        private SpatialGrid grid = new SpatialGrid(20, 20, 10, 60, 60, 60);
 
         public List<GameObject[]> PerformPhase(List<GameObject> cubes)
         {

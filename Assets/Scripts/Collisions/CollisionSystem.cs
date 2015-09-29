@@ -57,7 +57,7 @@ namespace Assets.Scripts.Collisions
             var script = cube.GetComponent<SmallCubeController>();
             if (script != null)
             {
-                script.ChangeColor(Time.realtimeSinceStartup);
+                script.OnCollision(Time.realtimeSinceStartup);
             }
         }
     }

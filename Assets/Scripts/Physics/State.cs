@@ -7,22 +7,20 @@ namespace Assets.Scripts.Physics
     /// </summary>
     public class State
     {
-        public Vector3 position { get; set; }                   // Physical Position of Object
-        public Vector3 momentum { get; set; }                   // Current Momentum in kg*m/s
+        public Vector3 position;                // Physical Position of Object
+        public Vector3 momentum;                // Current Momentum in kg*m/s
 
-        public Quaternion orientation { get; set; }             // Current Orientation of Physics Object
-        public Vector3 angularMomentum { get; set; }            // Current angular momentum
+        public Quaternion orientation;          // Current Orientation of Physics Object
+        public Vector3 angularMomentum;         // Current angular momentum
 
-        public Vector3 velocity { get; set; }           // Calculated velocity of object (m/s)
-        public Quaternion spin { get; private set; }            // Quaternion rate of change in orientation.
-        public Vector3 angularVelocity { get; set; }    // Velocity of Angular change
+        public Vector3 velocity;                // Calculated velocity of object (m/s)
+        public Quaternion spin;                 // Quaternion rate of change in orientation.
+        public Vector3 angularVelocity;         // Velocity of Angular change
 
-        public float mass { get; private set; }                 // Mass of object
-        public float inverseMass { get; private set; }
-        public Vector3 inertiaTensor { get; private set; }        // Inertia Tensor of object (We use only cubes in physics sim, so only one value)
+        public float mass;                      // Mass of object
+        public float inverseMass;
+        public Vector3 inertiaTensor;           // Inertia Tensor of object (We use only cubes in physics sim, so only one value)
         public Vector3 inverseInertiaTensor;
-
-        public float motion;
 
         public State(Vector3 startPosition, Quaternion startOriantation, float mass, Vector3 inertiaTensor)
         {

@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace Assets.Scripts.Collisions
 {
@@ -9,9 +8,7 @@ namespace Assets.Scripts.Collisions
     internal class OrientedBox3D
     {
         public Vector3 center { get; private set; }
-
         public Vector3[] axis { get; private set; }
-
         public float[] extents { get; private set; }
 
         public Vector3 velocity { get; private set; }
@@ -20,14 +17,11 @@ namespace Assets.Scripts.Collisions
         public Matrix3 inverseInertiaTensorLocal = new Matrix3();
         public Matrix3 inverseInertiaTensorWorld = new Matrix3();
 
-        //public Dictionary<int, List<Contact>> contacts;
-
         public OrientedBox3D()
         {
             center = new Vector3();
             axis = new Vector3[3];
             extents = new float[3];
-            //contacts = new Dictionary<int, List<Contact>>();
         }
 
         /// <summary>
@@ -36,15 +30,12 @@ namespace Assets.Scripts.Collisions
         /// <param name="o"> GameObject to update from </param>
         public void UpdateDataFromObject(GameObject o)
         {
-            var state = o.GetComponent<ObjectController>().nextState;
+            var controller = o.GetComponent<ObjectController>();
+            var state = controller.nextState;
             var transform = o.GetComponent<Transform>();
-            var body = o.GetComponent<Rigidbody>();
 
-            center = transform.position;//.Set(transform.position.x, transform.position.y, transform.position.z); //temp
-            //center = state.position;
-
-            orientation = transform.rotation;   //temp
-            //var orientation = state.orientation;
+            center = state.position;
+            orientation = state.orientation;
 
             axis[0] = orientation * Vector3.right;
             axis[1] = orientation * Vector3.up;
@@ -54,13 +45,22 @@ namespace Assets.Scripts.Collisions
             extents[1] = transform.localScale.y * 0.5f;
             extents[2] = transform.localScale.z * 0.5f;
 
-            velocity = body.velocity;//state.velocity;
+            velocity = state.velocity;
 
             inverseInertiaTensorLocal.SetDiagonal(state.inverseInertiaTensor);
+
+            // Last frame acceleration for collision handling
+            controller.lastFrameAcceleration = controller.accumulatedLinearForce * controller.nextState.inverseMass;
 
             _CalculateDerivedData();
         }
 
+        /// <summary>
+        /// Calculates the transform matrix in wirld coords
+        /// </summary>
+        /// <param name="transformMatrix"></param>
+        /// <param name="position"></param>
+        /// <param name="orientation"></param>
         public void CalculateTransformMatrix(ref Matrix4x4 transformMatrix, Vector3 position, Quaternion orientation)
         {
             transformMatrix[0] = 1 - 2 * orientation.y * orientation.y - 2 * orientation.z * orientation.z;
@@ -79,6 +79,12 @@ namespace Assets.Scripts.Collisions
             transformMatrix[11] = position.z;
         }
 
+        /// <summary>
+        /// Calculates the inertia tensor in world coords
+        /// </summary>
+        /// <param name="iitWorld"></param>
+        /// <param name="iitBody"></param>
+        /// <param name="rotmat"></param>
         public void TransformInertiaTensor(ref Matrix3 iitWorld, Matrix3 iitBody, Matrix4x4 rotmat)
         {
             float t4 = rotmat[0] * iitBody[0] + rotmat[1] * iitBody[3] + rotmat[2] * iitBody[6];
@@ -102,49 +108,13 @@ namespace Assets.Scripts.Collisions
             iitWorld[8] = t52 * rotmat[8] + t57 * rotmat[9] + t62 * rotmat[10];
         }
 
-        private void _CalculateDerivedData() {
+        /// <summary>
+        /// Calculates variables to world coords
+        /// </summary>
+        private void _CalculateDerivedData()
+        {
             CalculateTransformMatrix(ref transform, center, orientation);
             TransformInertiaTensor(ref inverseInertiaTensorWorld, inverseInertiaTensorLocal, transform);
         }
-
-        /************************ contacts***************************/
-        //public void AddOrUpdateContact(GameObject cube, Contact c)
-        //{
-        //    List<Contact> existingContacts;
-        //    if (contacts.TryGetValue(cube.GetInstanceID(), out existingContacts))
-        //    {
-        //        var found = -1;
-        //        for (int i = 0; i < existingContacts.Count; i++)
-        //        {
-        //            if (existingContacts[i] == c)
-        //            {
-        //                found = i;
-        //                break;
-        //            }
-        //        }
-        //        if (found > -1)
-        //            existingContacts[found].Update(c.point, c.depth);
-        //        else
-        //            existingContacts.Add(c);
-        //    }
-        //    else
-        //    {
-        //        existingContacts = new List<Contact>();
-        //        existingContacts.Add(c);
-        //        contacts.Add(cube.GetInstanceID(), existingContacts);
-        //    }
-        //}
-
-        //public void DeleteContact(int cubeId, Contact c)
-        //{
-        //    List<Contact> existing;
-        //    if (contacts.TryGetValue(cubeId, out existing))
-        //    {
-        //        existing.Remove(c);
-        //    }
-        //}
-        //public void ResetContacts() {
-        //    contacts = new Dictionary<int, List<Contact>>();
-        //}
     }
 }

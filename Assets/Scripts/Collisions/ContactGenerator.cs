@@ -1,5 +1,4 @@
-﻿using System;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace Assets.Scripts.Collisions
 {
@@ -14,7 +13,6 @@ namespace Assets.Scripts.Collisions
         /// <param name="coll"> Collision Info containing all important data </param>
         public static void ComputeCollisionInfo(ref CollisionInfo coll)
         {
-            float depth = 0;
             if (coll.n_min.sqrMagnitude > Vector3.kEpsilon)
             {
                 coll.n = coll.n_min;
@@ -27,8 +25,6 @@ namespace Assets.Scripts.Collisions
             {
                 coll.n *= -1;
             }
-            depth = -coll.r_min;
-
             //Debug.Log(coll.code);
 
             if (coll.code > 6)
@@ -52,7 +48,6 @@ namespace Assets.Scripts.Collisions
             Vector3 pa = coll.A.center;
             Vector3 pb = coll.B.center;
             float sign;
-            Vector3 n = Vector3.Cross(coll.A.axis[coll.tested_axis_0], coll.B.axis[coll.tested_axis_1]);
 
             //Berechne die globalen / lokale positionen von eckpunkten der Kanten
             for (var j = 0; j < 3; j++)
@@ -80,7 +75,7 @@ namespace Assets.Scripts.Collisions
             // Berechne den schnittpunkt der beiden geraden
             float alpha, beta;
             Vector3 point1, point2;
-            float dist_c1_c2 = Utils.ClosestPointTwoLines(pa, da, pb, db, true, out alpha, out beta, out point1, out point2);
+            Utils.ClosestPointTwoLines(pa, da, pb, db, true, out alpha, out beta, out point1, out point2);
 
             // Correct normal and depth to go from A to B
             Vector3 normal = (Vector3.Dot(coll.A.center - coll.B.center, coll.n) < 0) ? -coll.n : coll.n;
@@ -226,113 +221,28 @@ namespace Assets.Scripts.Collisions
             }
         }
 
+        //public static void FindDynamicPoint(ref CollisionInfo coll)
+        //{
+        //    if (coll.code == 0) return;
+        //    // Last intersection As face
+        //    if (coll.code <= 3)
+        //    {
+        //        _GenerateDynamicFacePointA(ref coll);
+        //    }
+        //    else if (coll.code <= 6)
+        //    {
+        //        _GenerateDynamicFacePointB(ref coll);
+        //    }
+        //}
 
-        /// <summary>
-        /// Not used atm
-        /// </summary>
-        /// <param name="coll"></param>
-        public static void FindDynamicPoint(ref CollisionInfo coll)
-        {
-            if (coll.code == 0) return;
-            // Last intersection As face
-            if (coll.code <= 3)
-            {
-                _GenerateDynamicFacePointA(ref coll);
-            }
-            else if (coll.code <= 6)
-            {
-                _GenerateDynamicFacePointB(ref coll);
-            }
-        }
+        //private static float _MaxVectorNumber(Vector3 v)
+        //{
+        //    return Math.Max(Math.Max(v.x, v.y), v.z);
+        //}
 
-        private static float _MaxVectorNumber(Vector3 v)
-        {
-            return Math.Max(Math.Max(v.x, v.y), v.z);
-        }
-
-        private static float _MinVectorNumber(Vector3 v)
-        {
-            return Math.Min(Math.Min(v.x, v.y), v.z);
-        }
-
-        private static void _GenerateDynamicFacePointA(ref CollisionInfo coll)
-        {
-            Vector3 y = Vector3.zero;
-            float sign;
-            int i = coll.tested_axis_0;
-            float yj = float.MaxValue;
-            Vector3 point = Vector3.zero;
-            for (int j = 0; j < 3; j++)
-            {
-                sign = (coll.R[i, j] > 0) ? 1 : -1;
-                y[i] = -1 * sign * coll.B.extents[j];
-            }
-            for (int j = 0; j < 3; j++)
-            {
-                if (coll.B.extents[j] <= _MaxVectorNumber(y))
-                {
-                    yj = coll.B.extents[j];
-                    point = coll.B.center + coll.B.axis[j] * yj;
-                }
-                else if (-coll.B.extents[j] >= _MinVectorNumber(y))
-                {
-                    yj = -coll.B.extents[j];
-                    point = coll.B.center + coll.B.axis[j] * yj;
-                }
-            }
-            if (yj == float.MaxValue)
-            {
-                for (int j = 0; j < 3; j++)
-                {
-                    if (y[j] < yj)
-                    {
-                        yj = y[j];
-                        point = coll.B.center + coll.B.axis[j] * yj;
-                    }
-                }
-            }
-
-            //coll.contactPointsA.Add(point);
-        }
-
-        private static void _GenerateDynamicFacePointB(ref CollisionInfo coll)
-        {
-            Vector3 x = Vector3.zero;
-            float sign;
-            int j = coll.tested_axis_0;
-            float xi = float.MaxValue;
-            Vector3 point = Vector3.zero;
-            for (int i = 0; i < 3; i++)
-            {
-                sign = (coll.R[i, j] > 0) ? 1 : -1;
-                x[i] = 1 * sign * coll.A.extents[i];
-            }
-            for (int i = 0; i < 3; i++)
-            {
-                if (coll.A.extents[i] <= _MaxVectorNumber(x))
-                {
-                    xi = coll.A.extents[i];
-                    point = coll.A.center + coll.A.axis[i] * xi;
-                }
-                else if (-coll.A.extents[i] >= _MinVectorNumber(x))
-                {
-                    xi = -coll.A.extents[i];
-                    point = coll.A.center + coll.A.axis[i] * xi;
-                }
-            }
-            if (xi == float.MaxValue)
-            {
-                for (int i = 0; i < 3; i++)
-                {
-                    if (x[i] < xi)
-                    {
-                        xi = x[i];
-                        point = coll.A.center + coll.A.axis[i] * xi;
-                    }
-                }
-            }
-
-            //coll.contactPointsA.Add(point);
-        }
+        //private static float _MinVectorNumber(Vector3 v)
+        //{
+        //    return Math.Min(Math.Min(v.x, v.y), v.z);
+        //}
     }
 }

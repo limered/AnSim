@@ -23,9 +23,8 @@ namespace Assets.Scripts
         public float Restitution;
         public float Friction;
 
-        public Vector3 CollisionForce;  // public und in unity zu sehen für testing
-        public Vector3 CollisionTorque; // public und in unity zu sehen für testing
-        public Vector3 accumulatedForce;
+        public Vector3 accumulatedLinearForce;
+        public Vector3 accumulatedAngularForce;
         public Vector3 lastFrameAcceleration;
 
         public bool isAwake;
@@ -72,9 +71,6 @@ namespace Assets.Scripts
             nextState = lastState.Clone();
             anSimCollider = new OrientedBox3D();
             anSimCollider.UpdateDataFromObject(gameObject);
-
-            CollisionForce = new Vector3();
-            CollisionTorque = new Vector3();
         }
 
         /// <summary>
@@ -115,9 +111,7 @@ namespace Assets.Scripts
         /// <param name="force"> Container for force calculation </param>
         public virtual void MovementDamping(ref Vector3 force)
         {
-            var tempVel = GetComponent<Rigidbody>().velocity;
-
-            force += -LinearDamping * tempVel;//nextState.velocity;
+            force += -LinearDamping * nextState.velocity;
         }
 
         /// <summary>
@@ -126,9 +120,7 @@ namespace Assets.Scripts
         /// <param name="torque"> Container for torque calculation </param>
         public virtual void RotationalDamping(ref Vector3 torque)
         {
-            var tempVel = GetComponent<Rigidbody>().angularVelocity;
-
-            torque += -AngularDamping * tempVel;//nextState.angularVelocity * nextState.mass;
+            torque += -AngularDamping * nextState.angularVelocity;
         }
 
         /// <summary>
@@ -140,8 +132,8 @@ namespace Assets.Scripts
             if (awake)
             {
                 isAwake = true;
-                GetComponent<Rigidbody>().WakeUp(); //Temp
-                motion = MainProgram.SLEEP_EPSILON * 2f;    // Set motion to 2*Sleep epsilos, so it doesn't sleep again instantly
+                // Set motion to 2*Sleep epsilos, so it doesn't sleep again instantly
+                motion = MainProgram.SLEEP_EPSILON * 2f;
             }
             else if (canSleep)
             {
@@ -152,9 +144,7 @@ namespace Assets.Scripts
                 lastState.velocity = Vector3.zero;
                 lastState.angularVelocity = Vector3.zero;
 
-                // Temp for uniry
-                GetComponent<Rigidbody>().Sleep(); //temp //  .velocity = Vector3.zero;
-                                                   //GetComponent<Rigidbody>().angularVelocity = Vector3.zero;
+                ClearForces();
             }
         }
 
@@ -163,18 +153,45 @@ namespace Assets.Scripts
         /// </summary>
         public void UpdateMotion()
         {
-            var body = GetComponent<Rigidbody>();   // Temp
+            var body = nextState;
             var currentMotion = Vector3.Dot(body.velocity, body.velocity) + Vector3.Dot(body.angularVelocity, body.angularVelocity);
 
             var bias = Mathf.Pow(0.5f, MainProgram.TIMESTEP);
 
-            motion = bias * motion + (1f - bias) * currentMotion;   // Durchschnitt über die letzten bewegungszahnel
+            motion = bias * motion + (1f - bias) * currentMotion;   // Durchschnitt über die letzten bewegungszajlen
 
             if (motion > 10 * MainProgram.SLEEP_EPSILON) motion = 10 * MainProgram.SLEEP_EPSILON;   // Begrenze bewegung nach oben
 
             // CHeck if should sleep
             if (motion < MainProgram.SLEEP_EPSILON)
                 SetAwake(false);
+        }
+
+        /// <summary>
+        /// Adds a force to the next calculation
+        /// </summary>
+        /// <param name="force"></param>
+        public void AddForce(Vector3 force)
+        {
+            accumulatedLinearForce += force;
+        }
+
+        /// <summary>
+        /// Adds a torque to the next calculation
+        /// </summary>
+        /// <param name="torque"></param>
+        public void AddTorque(Vector3 torque)
+        {
+            accumulatedAngularForce += torque;
+        }
+
+        /// <summary>
+        /// Clears all accumulated forces
+        /// </summary>
+        public void  ClearForces()
+        {
+            accumulatedLinearForce = Vector3.zero;
+            accumulatedAngularForce = Vector3.zero;
         }
     }
 }

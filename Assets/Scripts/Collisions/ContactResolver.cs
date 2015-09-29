@@ -190,5 +190,5 @@ namespace Assets.Scripts.Collisions
                 rotationAng[b] = rotationAmount[b] * 0.5f;
             }
         }
-    }
+    }    
 }

@@ -18,8 +18,7 @@ namespace Assets.Scripts.Renderer
                 var position = _InterpolatePosition(alpha, objectControl);
                 var rotation = _InterpolateOrientation(alpha, objectControl);
 
-                //TODO when physics are working
-                //_UpdateRendering(position, rotation, cube.GetComponent<Transform>());
+                _UpdateRendering(position, rotation, cube.GetComponent<Transform>());
 
                 _UpdateCollider(objectControl, cube);
             }

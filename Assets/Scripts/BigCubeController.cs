@@ -70,10 +70,8 @@ namespace Assets.Scripts
             Vector3 torque = Vector3.zero;
             RotationForces(ref torque);
 
-            GetComponent<Rigidbody>().AddForce(force);
-            GetComponent<Rigidbody>().AddTorque(torque);
-
-            lastFrameAcceleration = force * nextState.inverseMass;
+            AddForce(force);
+            AddTorque(torque);
         }
     }
 }

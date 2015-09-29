@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 namespace Assets.Scripts.Collisions
@@ -8,6 +7,7 @@ namespace Assets.Scripts.Collisions
     {
         public GameObject object_A;
         public GameObject object_B;
+
         // Boxes to collide
         public OrientedBox3D A;
 
@@ -53,12 +53,9 @@ namespace Assets.Scripts.Collisions
             object_B = b;
             A = a.GetComponent<ObjectController>().anSimCollider;
             B = b.GetComponent<ObjectController>().anSimCollider;
-            try {
-                relativePosition = B.center - A.center;
-            }
-            catch (Exception e) {
-                Debug.Log("test");
-            }
+
+            relativePosition = B.center - A.center;
+
             relativePositionRotated = new Vector3(Vector3.Dot(relativePosition, A.axis[0]), Vector3.Dot(relativePosition, A.axis[1]), Vector3.Dot(relativePosition, A.axis[2]));
             relativeVelocity = A.velocity * dt - B.velocity * dt;
 
@@ -75,7 +72,8 @@ namespace Assets.Scripts.Collisions
             contacts.Clear();
         }
 
-        public void AddContact(Contact c) {
+        public void AddContact(Contact c)
+        {
             contacts.Add(c);
         }
 

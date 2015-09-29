@@ -4,38 +4,5 @@
     <ArrayOfString>
       <string>c:\users\livei\documents\githubvisualstudio\ansim\assets\scripts\physics\state.cs</string>
     </ArrayOfString>
-    <ArrayOfString>
-      <string>c:\users\livei\documents\githubvisualstudio\ansim\assets\scripts\mainprogram.cs</string>
-    </ArrayOfString>
-    <ArrayOfString>
-      <string>c:\users\livei\documents\githubvisualstudio\ansim\assets\scripts\objectcontroller.cs</string>
-    </ArrayOfString>
-    <ArrayOfString>
-      <string>c:\users\livei\documents\githubvisualstudio\ansim\assets\scripts\collisions\contact.cs</string>
-    </ArrayOfString>
-    <ArrayOfString>
-      <string>c:\users\livei\documents\githubvisualstudio\ansim\assets\scripts\collisions\collisioninfo.cs</string>
-    </ArrayOfString>
-    <ArrayOfString>
-      <string>c:\users\livei\documents\githubvisualstudio\ansim\assets\scripts\collisions\collisionsolver.cs</string>
-    </ArrayOfString>
-    <ArrayOfString>
-      <string>c:\users\livei\documents\githubvisualstudio\ansim\assets\scripts\collisions\contactresolver.cs</string>
-    </ArrayOfString>
-    <ArrayOfString>
-      <string>c:\users\livei\documents\githubvisualstudio\ansim\assets\scripts\collisions\collisionsystem.cs</string>
-    </ArrayOfString>
-    <ArrayOfString>
-      <string>c:\users\livei\documents\githubvisualstudio\ansim\assets\scripts\collisions\spatialgrid.cs</string>
-    </ArrayOfString>
-    <ArrayOfString>
-      <string>c:\users\livei\documents\githubvisualstudio\ansim\assets\scripts\collisions\broadphase.cs</string>
-    </ArrayOfString>
-    <ArrayOfString>
-      <string>c:\users\livei\documents\githubvisualstudio\ansim\assets\scripts\collisions\narrowphase.cs</string>
-    </ArrayOfString>
-    <ArrayOfString>
-      <string>C:\Users\livei\Documents\GitHubVisualStudio\AnSim\Assets\Scripts\Statics.cs</string>
-    </ArrayOfString>
   </ArrayOfArrayOfString>
 </ArrayOfArrayOfArrayOfString>
