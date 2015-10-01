@@ -102,7 +102,7 @@ namespace Assets.Scripts
         /// <param name="force"> Container for force calculation </param>
         public void Gravity(ref Vector3 force)
         {
-            force.y += MainProgram.GRAVITY * nextState.mass;
+            force.y += MainProgram.GRAVITY * nextState.mass * 0.4f;
         }
 
         /// <summary>
@@ -111,7 +111,7 @@ namespace Assets.Scripts
         /// <param name="force"> Container for force calculation </param>
         public virtual void MovementDamping(ref Vector3 force)
         {
-            force += -LinearDamping * nextState.velocity;
+            force -= LinearDamping * nextState.velocity;
         }
 
         /// <summary>
@@ -120,7 +120,7 @@ namespace Assets.Scripts
         /// <param name="torque"> Container for torque calculation </param>
         public virtual void RotationalDamping(ref Vector3 torque)
         {
-            torque += -AngularDamping * nextState.angularVelocity;
+            torque -= AngularDamping * nextState.angularVelocity;
         }
 
         /// <summary>
@@ -133,16 +133,19 @@ namespace Assets.Scripts
             {
                 isAwake = true;
                 // Set motion to 2*Sleep epsilos, so it doesn't sleep again instantly
-                motion = MainProgram.SLEEP_EPSILON * 2f;
+                motion = MainProgram.SLEEP_EPSILON * 3f;
             }
             else if (canSleep)
             {
                 isAwake = false;
-                // Clear states, so it doesn't move anymore
+                //Clear states, so it doesn't move anymore
                 nextState.velocity = Vector3.zero;
                 nextState.angularVelocity = Vector3.zero;
-                lastState.velocity = Vector3.zero;
-                lastState.angularVelocity = Vector3.zero;
+
+                nextState.RecalculatePosition();
+                nextState.RecalculateRotation();
+
+                lastState = nextState.Clone();
 
                 ClearForces();
             }

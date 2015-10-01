@@ -11,9 +11,9 @@ namespace Assets.Scripts
         public static float TIMESTEP = 0.02f;
         static public float GRAVITY = -9.8f;
 
-        public static float POSITION_EPSOLON = 0.1f;
-        public static float SLEEP_EPSILON = 5f;
-        public static float VELOCITY_EPSILON = 0.1f;
+        public static float POSITION_EPSOLON = 0.0f;
+        public static float SLEEP_EPSILON = 0.3f;
+        public static float VELOCITY_EPSILON = 0.0f;
 
         public GameObject BigCubePrefab;
         public Camera MainCamera;
@@ -96,7 +96,7 @@ namespace Assets.Scripts
         private void Update()
         {
             var dt = Time.deltaTime;
-            dt = (dt >= 0.0333333333333333f) ? 0.0333333333333333f : dt;
+            dt = (dt >= 0.05f) ? 0.05f : dt;
             _accumulator += dt;
 
             while (_accumulator > TIMESTEP)

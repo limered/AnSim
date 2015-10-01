@@ -117,7 +117,7 @@ namespace Assets.Scripts.Collisions
         /// <param name="rotationAng"> Amount to ritate in rotation dir </param>
         public static void ResolveOverlap(Contact contact, float[] m, Matrix3[] invInertiaWorld, ref Vector3[] positionChange, ref Vector3[] rotationDir, ref float[] rotationAng)
         {
-            float angularLimit = 5f,
+            float angularLimit = 0.05f,
                 totalInertia = 0;
             float[] angularMove = new float[2],
                 linearMove = new float[2],

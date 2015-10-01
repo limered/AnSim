@@ -82,7 +82,7 @@ namespace Assets.Scripts.Collisions
         /// <returns>number of resulting points, max is 8 </returns>
         public static int IntersectRectQuad2D(float[] rect, Vector2[] p, out Vector2[] rPoints)
         {
-            rPoints = new Vector2[8];
+            rPoints = new Vector2[16];
             Vector2 start = p[p.Length - 1];
             Vector2 end;
             int pPointer = 0;

@@ -6,7 +6,7 @@ namespace Assets.Scripts
     {
         private Color baseCol = new Color(0.833f, 0.872f, 1);
         private Color red = new Color(1, 0, 0);
-        private Color currentColor;
+        private Color currentColor = new Color(0.833f, 0.872f, 1);
         private float startTime = -20f;
         private float maxTime = 10f; //sec
         private float maxTimeInv = 1f / 10f;
@@ -43,22 +43,8 @@ namespace Assets.Scripts
 
             _lastAwakeState = isAwake;
 
-            if (!isAwake) return;
-
-            // Generate forces for next frame
-            Vector3 force = Vector3.zero;
-            LinearForces(ref force);
-
-            // Generate torque for next frame
-            Vector3 torque = Vector3.zero;
-            RotationForces(ref torque);
-
-            // Add forces to accumulator
-            AddForce(force);
-            AddTorque(torque);
-
             // Update sleep state
-            UpdateMotion();
+            
         }
 
         /// <summary>

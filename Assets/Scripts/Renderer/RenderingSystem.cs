@@ -19,8 +19,6 @@ namespace Assets.Scripts.Renderer
                 var rotation = _InterpolateOrientation(alpha, objectControl);
 
                 _UpdateRendering(position, rotation, cube.GetComponent<Transform>());
-
-                _UpdateCollider(objectControl, cube);
             }
         }
 
@@ -31,7 +29,7 @@ namespace Assets.Scripts.Renderer
         /// <param name="objectControl"></param>
         private Vector3 _InterpolatePosition(float alpha, ObjectController objectControl)
         {
-            return Vector3.zero;
+            return Vector3.Lerp(objectControl.lastState.position, objectControl.nextState.position, alpha);
         }
 
         /// <summary>
@@ -42,7 +40,7 @@ namespace Assets.Scripts.Renderer
         /// <returns></returns>
         private Quaternion _InterpolateOrientation(float alpha, ObjectController objectControl)
         {
-            return Quaternion.identity;
+            return Quaternion.Slerp(objectControl.lastState.orientation, objectControl.nextState.orientation, alpha);
         }
 
         /// <summary>
@@ -53,18 +51,11 @@ namespace Assets.Scripts.Renderer
         /// <param name="transformComponent"> Transform component of object </param>
         private void _UpdateRendering(Vector3 position, Quaternion rotation, Transform transformComponent)
         {
-            transformComponent.position.Set(position.x, position.y, position.z);
-            transformComponent.rotation.Set(rotation.x, rotation.y, rotation.z, rotation.w);
-        }
+            for (int i = 0; i < 3; i++) if (float.IsNaN(position[i])) return;
+            for (int i = 0; i < 4; i++) if (float.IsNaN(rotation[i])) return;
 
-        /// <summary>
-        /// Calls the collider update method
-        /// </summary>
-        /// <param name="objectControl"></param>
-        /// <param name="cube"> GameObject instance </param>
-        private void _UpdateCollider(ObjectController objectControl, GameObject cube)
-        {
-            objectControl.anSimCollider.UpdateDataFromObject(cube);
+            transformComponent.position = position;
+            transformComponent.rotation = rotation;
         }
     }
 }

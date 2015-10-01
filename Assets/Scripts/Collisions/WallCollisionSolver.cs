@@ -81,9 +81,13 @@ namespace Assets.Scripts.Collisions
 
             if (!isWater && maxPenetration > 0)
             {
-                cube.GetComponent<Transform>().position += wallController.normal * maxPenetration * elasticity;
-                controller.AddForce(force * rigidbody.mass);
-                controller.AddTorque(torque);
+                rigidbody.position += wallController.normal * maxPenetration * elasticity;
+                //controller.AddForce(force);
+                //controller.AddTorque(torque);
+                controller.nextState.momentum += force * controller.nextState.inverseMass;
+                controller.nextState.angularMomentum += torque;
+                //controller.nextState.RecalculatePosition();
+                //controller.nextState.RecalculateRotation();
             }
             else
             {

@@ -88,7 +88,7 @@ namespace Assets.Scripts.Collisions
             float max;
 
             int positionIterationsUsed = 0;
-            while (positionIterationsUsed < 2)
+            while (positionIterationsUsed < 4)
             {
                 max = MainProgram.POSITION_EPSOLON;
                 index = -1;
@@ -114,7 +114,7 @@ namespace Assets.Scripts.Collisions
             max = 0;
 
             int velocityIterationsUsed = 0;
-            while (velocityIterationsUsed < 2)
+            while (velocityIterationsUsed < 4)
             {
                 max = MainProgram.VELOCITY_EPSILON;
                 index = -1;
@@ -209,7 +209,7 @@ namespace Assets.Scripts.Collisions
                         cp = Vector3.Cross(rotationChange[0], c[i].relativeContactPosition[0]);
                         cp += velocityChange[0];
 
-                        c[i].contactVelocity += c[i].contactToWorld.Transform(cp);
+                        c[i].contactVelocity += c[i].contactToWorld.TransformTranspose(cp);
                         c[i].CalculateDesiredDeltaVelocity();
                     }
                     else if (c[i].gameObject[0] == c[index].gameObject[1])
@@ -217,7 +217,7 @@ namespace Assets.Scripts.Collisions
                         cp = Vector3.Cross(rotationChange[1], c[i].relativeContactPosition[0]);
                         cp += velocityChange[1];
 
-                        c[i].contactVelocity += c[i].contactToWorld.Transform(cp);
+                        c[i].contactVelocity += c[i].contactToWorld.TransformTranspose(cp);
                         c[i].CalculateDesiredDeltaVelocity();
                     }
                 }
@@ -228,7 +228,7 @@ namespace Assets.Scripts.Collisions
                         cp = Vector3.Cross(rotationChange[0], c[i].relativeContactPosition[1]);
                         cp += velocityChange[0];
 
-                        c[i].contactVelocity -= c[i].contactToWorld.Transform(cp);
+                        c[i].contactVelocity -= c[i].contactToWorld.TransformTranspose(cp);
                         c[i].CalculateDesiredDeltaVelocity();
                     }
                     else if (c[i].gameObject[1] == c[index].gameObject[1])
@@ -236,7 +236,7 @@ namespace Assets.Scripts.Collisions
                         cp = Vector3.Cross(rotationChange[1], c[i].relativeContactPosition[1]);
                         cp += velocityChange[1];
 
-                        c[i].contactVelocity -= c[i].contactToWorld.Transform(cp);
+                        c[i].contactVelocity -= c[i].contactToWorld.TransformTranspose(cp);
                         c[i].CalculateDesiredDeltaVelocity();
                     }
                 }
@@ -273,18 +273,16 @@ namespace Assets.Scripts.Collisions
             var controller = contact.gameObject[0].GetComponent<ObjectController>();
             if (controller.IsAnimated)
             {
-                trans[0] = contact.gameObject[0].GetComponent<Transform>();
-                trans[0].position += positionChange[0] * masses[0];
-                trans[0].rotation *= Quaternion.AngleAxis(rotationAmount[0], rotationDirection[0]);
+                state[0].position += positionChange[0] * masses[0];
+                state[0].orientation *= Quaternion.AngleAxis(rotationAmount[0], rotationDirection[0]);
             }
 
             controller = contact.gameObject[1].GetComponent<ObjectController>();
 
             if (controller.IsAnimated && contact.gameObject[1] != null)
             {
-                trans[1] = contact.gameObject[1].GetComponent<Transform>();
-                trans[1].position += positionChange[1] * masses[1];
-                trans[1].rotation *= Quaternion.AngleAxis(rotationAmount[1], rotationDirection[1]);
+                state[1].position += positionChange[1] * masses[1];
+                state[1].orientation *= Quaternion.AngleAxis(rotationAmount[1], rotationDirection[1]);
             }
         }
 
@@ -299,8 +297,9 @@ namespace Assets.Scripts.Collisions
             State[] states = new State[2];
             float[] masses = new float[2];
             Matrix3[] inertias = new Matrix3[2];
+            ObjectController[] controllers = new ObjectController[2];
             //Rigidbody[] body = new Rigidbody[2];
-
+            controllers[0] = c.gameObject[0].GetComponent<ObjectController>();
             states[0] = c.gameObject[0].GetComponent<ObjectController>().nextState;
             masses[0] = states[0].inverseMass;
             inertias[0] = new Matrix3();
@@ -308,6 +307,7 @@ namespace Assets.Scripts.Collisions
 
             if (c.gameObject[1] != null)
             {
+                controllers[1] = c.gameObject[1].GetComponent<ObjectController>();
                 states[1] = c.gameObject[1].GetComponent<ObjectController>().nextState;
                 masses[1] = states[1].inverseMass;
                 inertias[1] = new Matrix3();
@@ -320,18 +320,20 @@ namespace Assets.Scripts.Collisions
 
             if (controller.IsAnimated && states[0].inverseMass > 0f && states[0].mass > 0)
             {
-                //body[0] = c.gameObject[0].GetComponent<Rigidbody>();
-                states[0].velocity += (velocityChange[0]);// * states[0].inverseMass);
-                states[0].angularVelocity += rotationChange[0];// (inertias[0].TransformTranspose(rotationChange[0]));
+                states[0].momentum += velocityChange[0] * states[0].mass;
+                for (int i = 0; i < 3; i++) states[0].angularMomentum[i] += rotationChange[0][i] * states[0].inverseInertiaTensor[i];
+                states[0].RecalculatePosition();
+                states[0].RecalculateRotation();
             }
 
             controller = c.gameObject[1].GetComponent<ObjectController>();
 
             if (controller.IsAnimated && states[1] != null && states[1].inverseMass > 0f && states[1].mass > 0)
             {
-                //body[1] = c.gameObject[1].GetComponent<Rigidbody>();
-                states[1].velocity += (velocityChange[1]);// * states[1].inverseMass);
-                states[1].angularVelocity += rotationChange[1];// (inertias[1].TransformTranspose(rotationChange[1]));
+                states[1].momentum += velocityChange[1] * states[1].mass;
+                for (int i = 0; i < 3; i++) states[1].angularMomentum[i] += rotationChange[1][i] * states[1].inverseInertiaTensor[i];
+                states[1].RecalculatePosition();
+                states[1].RecalculateRotation();
             }
         }
     }

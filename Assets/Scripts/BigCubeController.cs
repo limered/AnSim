@@ -60,18 +60,18 @@ namespace Assets.Scripts
         /// <summary>
         /// Only for testing
         /// </summary>
-        private void Update()
-        {
-            if (!isAwake) return;
+        //private void Update()
+        //{
+            //if (!isAwake) return;
 
-            Vector3 force = Vector3.zero;
-            LinearForces(ref force);
+            //Vector3 force = Vector3.zero;
+            //LinearForces(ref force);
 
-            Vector3 torque = Vector3.zero;
-            RotationForces(ref torque);
+            //Vector3 torque = Vector3.zero;
+            //RotationForces(ref torque);
 
-            AddForce(force);
-            AddTorque(torque);
-        }
+            //AddForce(force);
+            //AddTorque(torque);
+        //}
     }
 }

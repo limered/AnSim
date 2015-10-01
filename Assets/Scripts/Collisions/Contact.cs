@@ -18,7 +18,7 @@ namespace Assets.Scripts.Collisions
         public Matrix3 contactToWorld = new Matrix3();      // Transformation Matrix from world to contact space
         public Vector3[] relativeContactPosition = new Vector3[2]; // Relative position of the two objects in contact space
         public Vector3 contactVelocity;                            // Relative Velocity in Contact point space
-        public float desiredDeltaVelocity;                         // Velocity needet to push the two objects apart
+        public float desiredDeltaVelocity;                         // Velocity needed to push the two objects apart
 
         public Vector3 lastFrameAcc = Vector3.zero;
 
@@ -98,9 +98,9 @@ namespace Assets.Scripts.Collisions
         /// </summary>
         public void CalculateRelativePosition()
         {
-            relativeContactPosition[0] = point - gameObject[0].GetComponent<Transform>().position;
+            relativeContactPosition[0] = point - gameObject[0].GetComponent<ObjectController>().nextState.position;
             if (gameObject[1])
-                relativeContactPosition[1] = point - gameObject[1].GetComponent<Transform>().position;
+                relativeContactPosition[1] = point - gameObject[1].GetComponent<ObjectController>().nextState.position;
         }
 
         /// <summary>
@@ -159,7 +159,7 @@ namespace Assets.Scripts.Collisions
             if (Mathf.Abs(contactVelocity.x) < velocityLimit)
                 restitution = 0f;
 
-            //desiredDeltaVelocity = -contactVelocity.x * (1f + restitution);// * (contactVelocity.x - velocityFromAcc);
+            //desiredDeltaVelocity = -contactVelocity.x * (1f + restitution);
             desiredDeltaVelocity = -contactVelocity.x - restitution * (contactVelocity.x - velocityFromAcc);
         }
 

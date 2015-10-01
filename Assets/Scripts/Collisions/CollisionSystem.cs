@@ -40,12 +40,32 @@ namespace Assets.Scripts.Collisions
         private void _CollideWithWalls(List<GameObject> cubes, GameObject[] walls)
         {
             GameObject cube;
+            ObjectController objectControl;
             foreach (GameObject go in cubes)
             {
                 cube = go;
-                if (cube.GetComponent<ObjectController>().isAwake)
+                objectControl = cube.GetComponent<ObjectController>();
+
+                objectControl.ClearForces();
+                if (objectControl.isAwake)
+                {
+                    UpdateCollider(objectControl, cube);
+                    objectControl.lastState = objectControl.nextState.Clone();
+                    objectControl.UpdateMotion();
+
                     wallPhase.CollideWithWalls(ref cube, walls);
+                }
             }
+        }
+
+        /// <summary>
+        /// Calls the collider update method
+        /// </summary>
+        /// <param name="objectControl"></param>
+        /// <param name="cube"> GameObject instance </param>
+        private void UpdateCollider(ObjectController objectControl, GameObject cube)
+        {
+            objectControl.anSimCollider.UpdateDataFromObject(cube);
         }
 
         /// <summary>
