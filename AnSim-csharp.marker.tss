@@ -2,7 +2,13 @@
 <ArrayOfTabHighlightState xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <TabHighlightState>
     <extensions>
-      <string>Assets\Scripts\Collisions\NarrowPhase.cs</string>
+      <string>assets\scripts\collisions\narrowphase.cs</string>
+    </extensions>
+    <highlightIndex>2</highlightIndex>
+  </TabHighlightState>
+  <TabHighlightState>
+    <extensions>
+      <string>assets\scripts\collisions\collisionsystem.cs</string>
     </extensions>
     <highlightIndex>2</highlightIndex>
   </TabHighlightState>

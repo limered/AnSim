@@ -12,7 +12,7 @@ namespace Assets.Scripts
         static public float GRAVITY = -9.8f;
 
         public static float POSITION_EPSOLON = 0.0f;
-        public static float SLEEP_EPSILON = 0.3f;
+        public static float SLEEP_EPSILON = 0.5f;
         public static float VELOCITY_EPSILON = 0.0f;
 
         public GameObject BigCubePrefab;
@@ -96,7 +96,7 @@ namespace Assets.Scripts
         private void Update()
         {
             var dt = Time.deltaTime;
-            dt = (dt >= 0.05f) ? 0.05f : dt;
+            dt = (dt >= 0.02f) ? 0.02f : dt;
             _accumulator += dt;
 
             while (_accumulator > TIMESTEP)

@@ -56,22 +56,5 @@ namespace Assets.Scripts
 
             return result;
         }
-
-        /// <summary>
-        /// Only for testing
-        /// </summary>
-        //private void Update()
-        //{
-            //if (!isAwake) return;
-
-            //Vector3 force = Vector3.zero;
-            //LinearForces(ref force);
-
-            //Vector3 torque = Vector3.zero;
-            //RotationForces(ref torque);
-
-            //AddForce(force);
-            //AddTorque(torque);
-        //}
     }
 }
