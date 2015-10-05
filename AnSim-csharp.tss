@@ -2,7 +2,7 @@
 <ArrayOfArrayOfArrayOfString xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <ArrayOfArrayOfString>
     <ArrayOfString>
-      <string>C:\Users\livei\Documents\GitHubVisualStudio\AnSim\Assets\Scripts\Physics\PhysicsSystem.cs</string>
+      <string>c:\users\livei\documents\githubvisualstudio\ansim\assets\scripts\physics\physicssystem.cs</string>
     </ArrayOfString>
     <ArrayOfString>
       <string>c:\users\livei\documents\githubvisualstudio\ansim\assets\scripts\mainprogram.cs</string>
@@ -23,7 +23,7 @@
       <string>c:\users\livei\documents\githubvisualstudio\ansim\assets\scripts\collisions\utils.cs</string>
     </ArrayOfString>
     <ArrayOfString>
-      <string>c:\users\livei\documents\githubvisualstudio\ansim\assets\scripts\collisions\wallcollisionsolver.cs</string>
+      <string>C:\Users\livei\Documents\GitHubVisualStudio\AnSim\Assets\Scripts\Collisions\WallCollisionSolver.cs</string>
     </ArrayOfString>
     <ArrayOfString>
       <string>c:\users\livei\documents\githubvisualstudio\ansim\assets\scripts\collisions\contactgenerator.cs</string>
@@ -50,7 +50,7 @@
       <string>c:\users\livei\documents\githubvisualstudio\ansim\assets\scripts\objectcontroller.cs</string>
     </ArrayOfString>
     <ArrayOfString>
-      <string>C:\Users\livei\Documents\GitHubVisualStudio\AnSim\Assets\Scripts\BigCubeController.cs</string>
+      <string>c:\users\livei\documents\githubvisualstudio\ansim\assets\scripts\bigcubecontroller.cs</string>
     </ArrayOfString>
   </ArrayOfArrayOfString>
 </ArrayOfArrayOfArrayOfString>

@@ -48,6 +48,9 @@ namespace Assets.Scripts
                 Friction = stat.PlayerFriction;
                 canSleep = stat.PlayerCanSleep;
                 ((BigCubeController)this).MovementSpeed = stat.PlayerSpeed;
+                ((BigCubeController)this).AffectingRadius = stat.PlayerAffectingRadius;
+                ((BigCubeController)this).PushForce = stat.PlayerPushForce;
+                ((BigCubeController)this).Collision = stat.PlayerCollision;
             }
             else
             {

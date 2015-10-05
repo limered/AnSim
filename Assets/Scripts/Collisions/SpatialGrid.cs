@@ -57,16 +57,27 @@ namespace Assets.Scripts.Collisions
         {
             var collider = entity.GetComponent<ObjectController>().anSimCollider;
             if (collider == null) return;
-            var state = entity.GetComponent<ObjectController>().nextState;
-            if (state == null) return;
 
-            // Get Min Max values
-            minX = (int)(_ProjectPosition(Vector3.right, collider, -1) * cellSizeXInv);
-            minY = (int)(_ProjectPosition(Vector3.up, collider, -1) * cellSizeYInv);
-            minZ = (int)(_ProjectPosition(Vector3.forward, collider, -1) * cellSizeZInv);
-            maxX = (int)(_ProjectPosition(Vector3.right, collider, 1) * cellSizeXInv);
-            maxY = (int)(_ProjectPosition(Vector3.up, collider, 1) * cellSizeYInv);
-            maxZ = (int)(_ProjectPosition(Vector3.forward, collider, 1) * cellSizeZInv);
+            if (entity.GetComponent<ObjectController>().isPlayer && entity.GetComponent<BigCubeController>().AffectingRadius > 0f)
+            {
+                var controller = entity.GetComponent<BigCubeController>();
+                minX = (int)((collider.center.x - controller.AffectingRadius) * cellSizeXInv);
+                maxX = (int)((collider.center.x + controller.AffectingRadius) * cellSizeXInv);
+                minY = (int)((collider.center.y - controller.AffectingRadius) * cellSizeYInv);
+                maxY = (int)((collider.center.y + controller.AffectingRadius) * cellSizeYInv);
+                minZ = (int)((collider.center.z - controller.AffectingRadius) * cellSizeZInv);
+                maxZ = (int)((collider.center.z + controller.AffectingRadius) * cellSizeZInv);
+            }
+            else
+            {
+                // Get Min Max values
+                minX = (int)(_ProjectPosition(Vector3.right, collider, -1) * cellSizeXInv);
+                minY = (int)(_ProjectPosition(Vector3.up, collider, -1) * cellSizeYInv);
+                minZ = (int)(_ProjectPosition(Vector3.forward, collider, -1) * cellSizeZInv);
+                maxX = (int)(_ProjectPosition(Vector3.right, collider, 1) * cellSizeXInv);
+                maxY = (int)(_ProjectPosition(Vector3.up, collider, 1) * cellSizeYInv);
+                maxZ = (int)(_ProjectPosition(Vector3.forward, collider, 1) * cellSizeZInv);
+            }
 
             // make sure all is in bounds and min <= max
             if (maxX < minX) { var temp = maxX; maxX = minX; minX = temp; }
@@ -123,7 +134,8 @@ namespace Assets.Scripts.Collisions
                                 var awake0 = body[0].GetComponent<ObjectController>().isAwake;
                                 var awake1 = body[1].GetComponent<ObjectController>().isAwake;
                                 if (!awake0 && !awake1) continue;
-                                if (knownCollisions.ContainsKey(body[0].GetInstanceID() + "_" + body[1].GetInstanceID())) continue;
+                                if (knownCollisions.ContainsKey(body[0].GetInstanceID() + "_" + body[1].GetInstanceID()))
+                                    continue;
                                 GameObject[] pair = new GameObject[2];
                                 pair[0] = body[0];
                                 pair[1] = body[1];

@@ -31,5 +31,8 @@ namespace Assets.Scripts
         public float PlayerFriction;
         public bool PlayerCanSleep;
         public float PlayerSpeed;
+        public float PlayerAffectingRadius;
+        public float PlayerPushForce;
+        public bool PlayerCollision;
     }
 }

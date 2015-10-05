@@ -32,6 +32,25 @@ namespace Assets.Scripts.Collisions
             return moved;
         }
 
+        private void AddPlayerForceToCube(GameObject player, GameObject cube, float dt)
+        {
+            var cubeController = cube.GetComponent<ObjectController>();
+            var cubeCollider = cube.GetComponent<ObjectController>().anSimCollider;
+
+            var playerController = player.GetComponent<BigCubeController>();
+            var playerCollider = playerController.anSimCollider;
+
+            Vector3 distanceVector = cubeCollider.center - playerCollider.center;
+
+            if (distanceVector.sqrMagnitude < playerController.AffectingRadius * playerController.AffectingRadius)
+            {
+                cubeController.SetAwake(true);
+
+                Vector3 dir = distanceVector * AnSimMath.Fast_Inv_Sqrt(distanceVector.sqrMagnitude);
+                cubeController.AddForce(dir * playerController.PushForce);
+            }
+        }
+
         /// <summary>
         /// Checks collision between two cubes
         /// </summary>
@@ -41,6 +60,19 @@ namespace Assets.Scripts.Collisions
         /// <returns> true, if collision occured, all information is stored in coll</returns>
         private bool _Collide(GameObject cube0, GameObject cube1, float dt)
         {
+            // Only player adds forces
+            if (cube0.GetComponent<ObjectController>().isPlayer && cube0.GetComponent<BigCubeController>().AffectingRadius > 0f)
+            {
+                AddPlayerForceToCube(cube0, cube1, dt);
+                if (!cube0.GetComponent<BigCubeController>().Collision) return false;
+            }
+            else if (cube1.GetComponent<ObjectController>().isPlayer && cube1.GetComponent<BigCubeController>().AffectingRadius > 0f)
+            {
+                AddPlayerForceToCube(cube1, cube0, dt);
+                if (!cube1.GetComponent<BigCubeController>().Collision) return false;
+            }
+
+            
             coll.SetValues(cube0, cube1, dt);
 
             return _StaticCollision();

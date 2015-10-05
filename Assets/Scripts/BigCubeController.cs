@@ -8,6 +8,9 @@ namespace Assets.Scripts
     internal class BigCubeController : ObjectController
     {
         public float MovementSpeed;
+        public float AffectingRadius;
+        public float PushForce;
+        public bool Collision;
 
         /// <summary>
         /// Overrides base class implementation and adds a input force calculation.
