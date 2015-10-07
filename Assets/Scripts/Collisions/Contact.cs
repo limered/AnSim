@@ -131,7 +131,7 @@ namespace Assets.Scripts.Collisions
             Vector3 velocity = Vector3.Cross(rot, relativeContactPos);
             velocity += vel;
             Vector3 contactVelocity = contactToWorld.TransformTranspose(velocity);
-            Vector3 accVelocity = lastFrameVelocity * mass;
+            Vector3 accVelocity = lastFrameVelocity * MainProgram.TIMESTEP;
             accVelocity = contactToWorld.TransformTranspose(accVelocity);
             accVelocity.x = 0;
             contactVelocity += accVelocity;
@@ -146,13 +146,13 @@ namespace Assets.Scripts.Collisions
             float velocityLimit = 0.25f;
 
             var controller = gameObject[0].GetComponent<ObjectController>();
-            float velocityFromAcc = Vector3.Dot(controller.lastFrameAcceleration * controller.nextState.inverseMass, normal);
+            float velocityFromAcc = Vector3.Dot(controller.lastFrameAcceleration * MainProgram.TIMESTEP, normal);
 
             var restitution = controller.Restitution;
             if (gameObject[1] != null)
             {
                 controller = gameObject[1].GetComponent<ObjectController>();
-                velocityFromAcc -= Vector3.Dot(controller.lastFrameAcceleration * controller.nextState.inverseMass, normal);
+                velocityFromAcc -= Vector3.Dot(controller.lastFrameAcceleration * MainProgram.TIMESTEP, normal);
                 restitution += controller.Restitution;
             }
 

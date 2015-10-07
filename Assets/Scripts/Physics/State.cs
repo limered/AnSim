@@ -39,12 +39,12 @@ namespace Assets.Scripts.Physics
         }
 
         /// <summary>
-        /// Calculates the transform matrix in wirld coords
+        /// Calculates the transform matrix in world coords
         /// </summary>
         /// <param name="transformMatrix"></param>
         /// <param name="position"></param>
         /// <param name="orientation"></param>
-        public void CalculateTransformMatrix(ref Matrix4x4 transformMatrix, Vector3 position, Quaternion orientation)
+        private void CalculateTransformMatrix(ref Matrix4x4 transformMatrix, Vector3 position, Quaternion orientation)
         {
             transformMatrix[0] = 1 - 2 * orientation.y * orientation.y - 2 * orientation.z * orientation.z;
             transformMatrix[1] = 2 * orientation.x * orientation.y - 2 * orientation.w * orientation.z;
@@ -68,7 +68,7 @@ namespace Assets.Scripts.Physics
         /// <param name="iitWorld"></param>
         /// <param name="iitBody"></param>
         /// <param name="rotmat"></param>
-        public void TransformInertiaTensor(ref Matrix3 iitWorld, Matrix3 iitBody, Matrix4x4 rotmat)
+        private void TransformInertiaTensor(ref Matrix3 iitWorld, Matrix3 iitBody, Matrix4x4 rotmat)
         {
             float t4 = rotmat[0] * iitBody[0] + rotmat[1] * iitBody[3] + rotmat[2] * iitBody[6];
             float t9 = rotmat[0] * iitBody[1] + rotmat[1] * iitBody[4] + rotmat[2] * iitBody[7];
@@ -96,7 +96,6 @@ namespace Assets.Scripts.Physics
         /// </summary>
         public void CalculateDerivedData()
         {
-            orientation = AnSimMath.NormalizeQuaternion(orientation);
             CalculateTransformMatrix(ref transform, position, orientation);
             TransformInertiaTensor(ref inverseInertiaTensorWorld, inverseInertiaTensorLocal, transform);
         }
@@ -130,6 +129,7 @@ namespace Assets.Scripts.Physics
             clone.angularMomentum = angularMomentum;
             clone.RecalculatePosition();
             clone.RecalculateRotation();
+            clone.CalculateDerivedData();
             return clone;
         }
     }

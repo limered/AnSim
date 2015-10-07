@@ -93,16 +93,18 @@ namespace Assets.Scripts.Collisions
         }
 
         // Not used
-        //private bool _DynamicCollision()
-        //{
-        //    var mag = coll.relativeVelocity.sqrMagnitude;
-        //    if (coll.relativeVelocity.sqrMagnitude > Vector3.kEpsilon)
-        //        if (CollisionSolver.IntervalIntersectTime(ref coll))
-        //        {
-        //            ContactGenerator.FindDynamicPoint(ref coll);
-        //        }
-        //    return false;
-        //}
+        private bool _DynamicCollision()
+        {
+            var mag = coll.relativeVelocity.sqrMagnitude;
+            if (coll.relativeVelocity.sqrMagnitude > Vector3.kEpsilon)
+                if (CollisionSolver.IntervalIntersectTime(ref coll))
+                {
+                    ContactGenerator.FindDynamicPoint(ref coll);
+                    if(coll.contacts.Count > 0)
+                        return true;
+                }
+            return false;
+        }
 
         /// <summary>
         /// Seperates the two cubes and add forces

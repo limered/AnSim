@@ -63,15 +63,15 @@ namespace Assets.Scripts.Collisions
                 deltaVelocity *= deltaVelWorld;
                 deltaVelocity *= c.contactToWorld;
 
-                deltaVelocity.data[0] += inverseMass;
-                deltaVelocity.data[4] += inverseMass;
-                deltaVelocity.data[8] += inverseMass;
+                deltaVelocity[0] += inverseMass;
+                deltaVelocity[4] += inverseMass;
+                deltaVelocity[8] += inverseMass;
 
                 Matrix3 impulseMatrix = deltaVelocity.Inverse();
 
                 Vector3 velKill = new Vector3(c.desiredDeltaVelocity,
-                    -c.contactVelocity.y * friction,
-                    -c.contactVelocity.z * friction);
+                    -c.contactVelocity.y,
+                    -c.contactVelocity.z);
 
                 impulseContact = impulseMatrix.Transform(velKill);
 
@@ -170,7 +170,7 @@ namespace Assets.Scripts.Collisions
             Vector3[] rotationDirection = new Vector3[2];
             float[] rotationAmount = new float[2];
 
-            // Both final chenges
+            // Both final changes
             for (int b = 0; b < objectCount; b++)
             {
                 Vector3 t;
@@ -193,7 +193,7 @@ namespace Assets.Scripts.Collisions
                 positionChange[b] = contact.normal * linearMove[b] * 0.25f;
 
                 rotationDir[b] = rotationDirection[b];
-                rotationAng[b] = rotationAmount[b] * 0.25f;
+                rotationAng[b] = rotationAmount[b] * 0.5f;
             }
         }
     }    

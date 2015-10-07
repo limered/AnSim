@@ -222,28 +222,120 @@ namespace Assets.Scripts.Collisions
             }
         }
 
-        //public static void FindDynamicPoint(ref CollisionInfo coll)
-        //{
-        //    if (coll.code == 0) return;
-        //    // Last intersection As face
-        //    if (coll.code <= 3)
-        //    {
-        //        _GenerateDynamicFacePointA(ref coll);
-        //    }
-        //    else if (coll.code <= 6)
-        //    {
-        //        _GenerateDynamicFacePointB(ref coll);
-        //    }
-        //}
+        public static void FindDynamicPoint(ref CollisionInfo coll)
+        {
+            if (coll.code == 0) return;
+            // Last intersection As face
+            if (coll.code <= 3)
+            {
+                _GenerateDynamicFacePointA(ref coll);
+            }
+            else if (coll.code <= 6)
+            {
+                _GenerateDynamicFacePointB(ref coll);
+            }
+        }
 
-        //private static float _MaxVectorNumber(Vector3 v)
-        //{
-        //    return Math.Max(Math.Max(v.x, v.y), v.z);
-        //}
+        private static float _MaxVectorNumber(Vector3 v)
+        {
+            return Mathf.Max(Mathf.Max(v.x, v.y), v.z);
+        }
 
-        //private static float _MinVectorNumber(Vector3 v)
-        //{
-        //    return Math.Min(Math.Min(v.x, v.y), v.z);
-        //}
+        private static float _MinVectorNumber(Vector3 v)
+        {
+            return Mathf.Min(Mathf.Min(v.x, v.y), v.z);
+        }
+
+        private static void _GenerateDynamicFacePointA(ref CollisionInfo coll)
+        {
+            Vector3 y = Vector3.zero;
+            float sign;
+            int i = coll.tested_axis_0;
+            float yj = float.MaxValue;
+            Vector3 point = Vector3.zero;
+            for (int j = 0; j < 3; j++)
+            {
+                sign = (coll.R[i, j] > 0) ? 1 : -1;
+                y[i] = -1 * sign * coll.B.extents[j];
+            }
+            for (int j = 0; j < 3; j++)
+            {
+                if (coll.B.extents[j] <= _MaxVectorNumber(y))
+                {
+                    yj = coll.B.extents[j];
+                    point = coll.B.center + coll.B.axis[j] * yj;
+                }
+                else if (-coll.B.extents[j] >= _MinVectorNumber(y))
+                {
+                    yj = -coll.B.extents[j];
+                    point = coll.B.center + coll.B.axis[j] * yj;
+                }
+            }
+            if (yj == float.MaxValue)
+            {
+                for (int j = 0; j < 3; j++)
+                {
+                    if (y[j] < yj)
+                    {
+                        yj = y[j];
+                        point = coll.B.center + coll.B.axis[j] * yj;
+                    }
+                }
+            }
+
+            Vector3 normal = (Vector3.Dot(coll.A.center - coll.B.center, coll.n) < 0) ? -coll.n : coll.n;
+            float depth = (coll.r_min < 0) ? coll.r_min : -coll.r_min;
+            if (depth >= -1f && depth < 0)
+            {
+                var contact = new Contact(coll.object_A, coll.object_B, point, normal, coll.r_min, coll.code);
+                coll.AddContact(contact);
+            }
+        }
+
+        private static void _GenerateDynamicFacePointB(ref CollisionInfo coll)
+        {
+            Vector3 x = Vector3.zero;
+            float sign;
+            int j = coll.tested_axis_0;
+            float xi = float.MaxValue;
+            Vector3 point = Vector3.zero;
+            for (int i = 0; i < 3; i++)
+            {
+                sign = (coll.R[i, j] > 0) ? 1 : -1;
+                x[i] = 1 * sign * coll.A.extents[i];
+            }
+            for (int i = 0; i < 3; i++)
+            {
+                if (coll.A.extents[i] <= _MaxVectorNumber(x))
+                {
+                    xi = coll.A.extents[i];
+                    point = coll.A.center + coll.A.axis[i] * xi;
+                }
+                else if (-coll.A.extents[i] >= _MinVectorNumber(x))
+                {
+                    xi = -coll.A.extents[i];
+                    point = coll.A.center + coll.A.axis[i] * xi;
+                }
+            }
+            if (xi == float.MaxValue)
+            {
+                for (int i = 0; i < 3; i++)
+                {
+                    if (x[i] < xi)
+                    {
+                        xi = x[i];
+                        point = coll.A.center + coll.A.axis[i] * xi;
+                    }
+                }
+            }
+
+            Vector3 normal = (Vector3.Dot(coll.A.center - coll.B.center, coll.n) < 0) ? -coll.n : coll.n;
+            float depth = (coll.r_min < 0) ? coll.r_min : -coll.r_min;
+            if (depth >= -1f && depth < 0)
+            {
+                var contact = new Contact(coll.object_A, coll.object_B, point, normal, coll.r_min, coll.code);
+                coll.AddContact(contact);
+            }
+        }
     }
 }
