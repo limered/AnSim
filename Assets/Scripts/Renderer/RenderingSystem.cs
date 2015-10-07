@@ -18,7 +18,8 @@ namespace Assets.Scripts.Renderer
                 var position = _InterpolatePosition(alpha, objectControl);
                 var rotation = _InterpolateOrientation(alpha, objectControl);
 
-                _UpdateRendering(position, rotation, cube.GetComponent<Transform>());
+                if(objectControl.isAwake)
+                    _UpdateRendering(position, rotation, cube.GetComponent<Transform>());
             }
         }
 

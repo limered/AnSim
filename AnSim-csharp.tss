@@ -5,7 +5,7 @@
       <string>c:\users\livei\documents\githubvisualstudio\ansim\assets\scripts\physics\physicssystem.cs</string>
     </ArrayOfString>
     <ArrayOfString>
-      <string>c:\users\livei\documents\githubvisualstudio\ansim\assets\scripts\mainprogram.cs</string>
+      <string>C:\Users\livei\Documents\GitHubVisualStudio\AnSim\Assets\Scripts\MainProgram.cs</string>
     </ArrayOfString>
     <ArrayOfString>
       <string>c:\users\livei\documents\githubvisualstudio\ansim\assets\scripts\collisions\narrowphase.cs</string>
@@ -14,19 +14,13 @@
       <string>c:\users\livei\documents\githubvisualstudio\ansim\assets\scripts\physics\state.cs</string>
     </ArrayOfString>
     <ArrayOfString>
-      <string>c:\users\livei\documents\githubvisualstudio\ansim\assets\scripts\renderer\renderingsystem.cs</string>
-    </ArrayOfString>
-    <ArrayOfString>
       <string>c:\users\livei\documents\githubvisualstudio\ansim\assets\scripts\smallcubecontroller.cs</string>
     </ArrayOfString>
     <ArrayOfString>
       <string>c:\users\livei\documents\githubvisualstudio\ansim\assets\scripts\collisions\utils.cs</string>
     </ArrayOfString>
     <ArrayOfString>
-      <string>C:\Users\livei\Documents\GitHubVisualStudio\AnSim\Assets\Scripts\Collisions\WallCollisionSolver.cs</string>
-    </ArrayOfString>
-    <ArrayOfString>
-      <string>c:\users\livei\documents\githubvisualstudio\ansim\assets\scripts\collisions\contactgenerator.cs</string>
+      <string>c:\users\livei\documents\githubvisualstudio\ansim\assets\scripts\collisions\wallcollisionsolver.cs</string>
     </ArrayOfString>
     <ArrayOfString>
       <string>c:\users\livei\documents\githubvisualstudio\ansim\assets\scripts\collisions\collisionsolver.cs</string>
@@ -44,13 +38,31 @@
       <string>c:\users\livei\documents\githubvisualstudio\ansim\assets\scripts\collisions\orientedbox3d.cs</string>
     </ArrayOfString>
     <ArrayOfString>
-      <string>c:\users\livei\documents\githubvisualstudio\ansim\assets\scripts\collisions\contactresolver.cs</string>
-    </ArrayOfString>
-    <ArrayOfString>
       <string>c:\users\livei\documents\githubvisualstudio\ansim\assets\scripts\objectcontroller.cs</string>
     </ArrayOfString>
     <ArrayOfString>
+      <string>c:\users\livei\documents\githubvisualstudio\ansim\assets\scripts\statics.cs</string>
+    </ArrayOfString>
+    <ArrayOfString>
       <string>c:\users\livei\documents\githubvisualstudio\ansim\assets\scripts\bigcubecontroller.cs</string>
+    </ArrayOfString>
+    <ArrayOfString>
+      <string>C:\Users\livei\Documents\GitHubVisualStudio\AnSim\Assets\Scripts\Collisions\Contact.cs</string>
+    </ArrayOfString>
+    <ArrayOfString>
+      <string>C:\Users\livei\Documents\GitHubVisualStudio\AnSim\Assets\Scripts\Physics\PositionPhysics.cs</string>
+    </ArrayOfString>
+    <ArrayOfString>
+      <string>c:\users\livei\documents\githubvisualstudio\ansim\assets\scripts\collisions\contactresolver.cs</string>
+    </ArrayOfString>
+    <ArrayOfString>
+      <string>C:\Users\livei\Documents\GitHubVisualStudio\AnSim\Assets\Scripts\AnSimMath.cs</string>
+    </ArrayOfString>
+    <ArrayOfString>
+      <string>C:\Users\livei\Documents\GitHubVisualStudio\AnSim\Assets\Scripts\Matrix3.cs</string>
+    </ArrayOfString>
+    <ArrayOfString>
+      <string>C:\Users\livei\Documents\GitHubVisualStudio\AnSim\Assets\Scripts\Collisions\ContactGenerator.cs</string>
     </ArrayOfString>
   </ArrayOfArrayOfString>
 </ArrayOfArrayOfArrayOfString>
