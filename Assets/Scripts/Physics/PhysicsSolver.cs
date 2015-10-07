@@ -5,7 +5,7 @@ namespace Assets.Scripts.Physics
     /// <summary>
     /// Calculates position/velocity information of a physics state.
     /// </summary>
-    internal class PositionPhysics
+    internal class PhysicsSolver
     {
         private static Derivative evaluate(Vector3 force, Vector3 torque, State state)
         {

@@ -47,7 +47,7 @@ namespace Assets.Scripts.Collisions
                 cubeController.SetAwake(true);
 
                 Vector3 dir = distanceVector * AnSimMath.Fast_Inv_Sqrt(distanceVector.sqrMagnitude);
-                cubeController.AddForce(dir * playerController.PushForce);
+                cubeController.AddForce(dir * playerController.PushForce, false);
             }
         }
 

@@ -86,12 +86,12 @@ namespace Assets.Scripts.Collisions
                 //controller.nextState.angularMomentum += controller.nextState.inverseInertiaTensorLocal.Transform(torque);
                 //controller.nextState.RecalculatePosition();
                 //controller.nextState.RecalculateRotation();
-                controller.AddForce(force);
+                controller.AddForce(force, false);
                 controller.AddTorque(torque);
             }
             else
             {
-                controller.AddForce(force);
+                controller.AddForce(force, false);
                 controller.AddTorque(torque);
             }
         }

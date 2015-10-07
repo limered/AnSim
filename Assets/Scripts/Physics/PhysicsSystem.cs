@@ -26,10 +26,10 @@ namespace Assets.Scripts.Physics
                 controller.RotationForces(ref torque);
 
                 // Add forces to accumulator
-                controller.AddForce(force);
+                controller.AddForce(force, true);
                 controller.AddTorque(torque);
 
-                PositionPhysics.IntegrateRK4(controller.accumulatedLinearForce, controller.accumulatedAngularForce, controller.nextState, dt);
+                PhysicsSolver.IntegrateRK4(controller.accumulatedLinearForce, controller.accumulatedAngularForce, controller.nextState, dt);
             }
         }
     }

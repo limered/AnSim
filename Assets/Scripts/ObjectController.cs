@@ -28,6 +28,7 @@ namespace Assets.Scripts
         public Vector3 accumulatedLinearForce;
         public Vector3 accumulatedAngularForce;
         public Vector3 lastFrameAcceleration;
+        public Vector3 thisFrameAcceleration = new Vector3();
 
         public bool isAwake;
         public bool canSleep;
@@ -184,9 +185,11 @@ namespace Assets.Scripts
         /// Adds a force to the next calculation
         /// </summary>
         /// <param name="force"></param>
-        public void AddForce(Vector3 force)
+        public void AddForce(Vector3 force, bool AddToThisFrameAcc)
         {
             accumulatedLinearForce += force;
+            if (AddToThisFrameAcc)
+                thisFrameAcceleration += force;
         }
 
         /// <summary>
@@ -203,7 +206,8 @@ namespace Assets.Scripts
         /// </summary>
         public void  ClearForces()
         {
-            lastFrameAcceleration = accumulatedLinearForce * nextState.inverseMass;
+            lastFrameAcceleration = thisFrameAcceleration * nextState.inverseMass;
+            thisFrameAcceleration = Vector3.zero;
 
             accumulatedLinearForce = Vector3.zero;
             accumulatedAngularForce = Vector3.zero;
