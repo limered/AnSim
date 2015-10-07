@@ -67,7 +67,7 @@ namespace Assets.Scripts.Collisions
             Vector3[] contactTangent = new Vector3[2];
             if (Mathf.Abs(normal.x) > Mathf.Abs(normal.y))
             {
-                float s = 1.0f / Mathf.Sqrt(normal.z * normal.z + normal.x * normal.x);
+                float s = AnSimMath.Fast_Inv_Sqrt(normal.z * normal.z + normal.x * normal.x);
 
                 contactTangent[0].x = normal.z * s;
                 contactTangent[0].y = 0;
@@ -79,7 +79,7 @@ namespace Assets.Scripts.Collisions
             }
             else
             {
-                float s = 1.0f / Mathf.Sqrt(normal.z * normal.z + normal.y * normal.y);
+                float s = AnSimMath.Fast_Inv_Sqrt(normal.z * normal.z + normal.y * normal.y);
 
                 contactTangent[0].x = 0;
                 contactTangent[0].y = -normal.z * s;
@@ -110,12 +110,12 @@ namespace Assets.Scripts.Collisions
         {
             var controller = gameObject[0].GetComponent<ObjectController>();
             var body = controller.nextState;
-            contactVelocity = _CalculateLocalVelocity(body.angularVelocity, body.velocity, relativeContactPosition[0], controller.lastFrameAcceleration, controller.nextState.inverseMass);
+            contactVelocity = CalculateLocalVelocity(body.angularVelocity, body.velocity, relativeContactPosition[0], controller.lastFrameAcceleration, controller.nextState.inverseMass);
             if (gameObject[1])
             {
                 controller = gameObject[1].GetComponent<ObjectController>();
                 body = controller.nextState;
-                contactVelocity -= _CalculateLocalVelocity(body.angularVelocity, body.velocity, relativeContactPosition[1], controller.lastFrameAcceleration, controller.nextState.inverseMass);
+                contactVelocity -= CalculateLocalVelocity(body.angularVelocity, body.velocity, relativeContactPosition[1], controller.lastFrameAcceleration, controller.nextState.inverseMass);
             }
         }
 
@@ -126,14 +126,22 @@ namespace Assets.Scripts.Collisions
         /// <param name="vel"> Linear velocity of body </param>
         /// <param name="relativeContactPos"> Relative position to point. </param>
         /// <returns> Local velocity in a certain point </returns>
-        private Vector3 _CalculateLocalVelocity(Vector3 rot, Vector3 vel, Vector3 relativeContactPos, Vector3 lastFrameVelocity, float mass)
+        private Vector3 CalculateLocalVelocity(Vector3 rot, Vector3 vel, Vector3 relativeContactPos, Vector3 lastFrameVelocity, float mass)
         {
+            // Velocities from last frame to work against
+            Vector3 accVelocity = lastFrameVelocity * MainProgram.TIMESTEP;
+            // Transform to contact coordinates
+            accVelocity = contactToWorld.TransformTranspose(accVelocity);
+            // Only tangential velocities
+            accVelocity.x = 0;
+
+            // Relative velocity of point
             Vector3 velocity = Vector3.Cross(rot, relativeContactPos);
             velocity += vel;
+            // Transform to contact coordinates
             Vector3 contactVelocity = contactToWorld.TransformTranspose(velocity);
-            Vector3 accVelocity = lastFrameVelocity * MainProgram.TIMESTEP;
-            accVelocity = contactToWorld.TransformTranspose(accVelocity);
-            accVelocity.x = 0;
+
+            // Add last frame accelleration from last frame, small number will be eliminated with friction
             contactVelocity += accVelocity;
             return contactVelocity;
         }
@@ -146,6 +154,7 @@ namespace Assets.Scripts.Collisions
             float velocityLimit = 0.25f;
 
             var controller = gameObject[0].GetComponent<ObjectController>();
+            //Get the velocity from last frame
             float velocityFromAcc = Vector3.Dot(controller.lastFrameAcceleration * MainProgram.TIMESTEP, normal);
 
             var restitution = controller.Restitution;
@@ -158,10 +167,10 @@ namespace Assets.Scripts.Collisions
 
             restitution *= 0.5f;
 
+            // Limit restitution if velocity small (resting contact)
             if (Mathf.Abs(contactVelocity.x) < velocityLimit)
                 restitution = 0f;
-
-            //desiredDeltaVelocity = -contactVelocity.x * (1f + restitution);
+            // Combine bounce with the removed acceleration velocity
             desiredDeltaVelocity = -contactVelocity.x - restitution * (contactVelocity.x - velocityFromAcc);
         }
 
@@ -176,6 +185,7 @@ namespace Assets.Scripts.Collisions
             bool body0Awake = body0.isAwake;
             bool body1Awake = body1.isAwake;
 
+            // Only if one is awake, weka up the othen
             if (body0Awake ^ body1Awake)
             {
                 if (body0Awake) body1.SetAwake(true);
