@@ -11,9 +11,9 @@ namespace Assets.Scripts
         public static float TIMESTEP = 0.02f;
         static public float GRAVITY = -9.8f;
 
-        public static float POSITION_EPSOLON = 0.0f;
-        public static float SLEEP_EPSILON = 0.5f;
-        public static float VELOCITY_EPSILON = 0.0f;
+        public static float POSITION_EPSOLON = 0f;
+        public static float SLEEP_EPSILON = 0.7f;
+        public static float VELOCITY_EPSILON = 0f;
 
         public GameObject BigCubePrefab;
         public Camera MainCamera;

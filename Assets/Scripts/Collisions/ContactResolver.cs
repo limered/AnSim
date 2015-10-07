@@ -29,7 +29,7 @@ namespace Assets.Scripts.Collisions
                 for (int b = 0; b < objectCount; b++)
                 {
                     Vector3 deltaVelWorld = Vector3.Cross(c.relativeContactPosition[b], c.normal);
-                    deltaVelWorld = invInertia[b].TransformTranspose(deltaVelWorld);
+                    deltaVelWorld = invInertia[b].Transform(deltaVelWorld);
                     deltaVelWorld = Vector3.Cross(deltaVelWorld, c.relativeContactPosition[b]);
 
                     deltaVelocity += Vector3.Dot(deltaVelWorld, c.normal);
@@ -46,13 +46,13 @@ namespace Assets.Scripts.Collisions
                 Matrix3 deltaVelWorld = new Matrix3(),
                     impulseToTorque = new Matrix3(),
                     deltaVelWorld_temp = new Matrix3();
-                for (int i = 0; i < 2; i++)
+                for (int b = 0; b < 2; b++)
                 {
-                    inverseMass += m[i];
+                    inverseMass += m[b];
 
-                    impulseToTorque.SetSkewSymmetric(c.relativeContactPosition[i]);
+                    impulseToTorque.SetSkewSymmetric(c.relativeContactPosition[b]);
 
-                    deltaVelWorld_temp = impulseToTorque * invInertia[i];
+                    deltaVelWorld_temp = impulseToTorque * invInertia[b];
                     deltaVelWorld_temp *= impulseToTorque;
                     deltaVelWorld_temp *= -1;
 
@@ -63,28 +63,29 @@ namespace Assets.Scripts.Collisions
                 deltaVelocity *= deltaVelWorld;
                 deltaVelocity *= c.contactToWorld;
 
-                deltaVelocity[0] += inverseMass;
-                deltaVelocity[4] += inverseMass;
-                deltaVelocity[8] += inverseMass;
+                deltaVelocity.data[0] += inverseMass;
+                deltaVelocity.data[4] += inverseMass;
+                deltaVelocity.data[8] += inverseMass;
 
                 Matrix3 impulseMatrix = deltaVelocity.Inverse();
 
                 Vector3 velKill = new Vector3(c.desiredDeltaVelocity,
-                    -c.contactVelocity.y,
-                    -c.contactVelocity.z);
+                    -c.contactVelocity.y * friction,
+                    -c.contactVelocity.z * friction);
 
                 impulseContact = impulseMatrix.Transform(velKill);
 
                 float planarImpulse = Mathf.Sqrt(impulseContact.y * impulseContact.y + impulseContact.z * impulseContact.z);
                 if (planarImpulse > impulseContact.x * friction)
                 {
-                    planarImpulse = 1f / planarImpulse;
+                    // dynamic friction
+                    planarImpulse = 1f/planarImpulse;
                     impulseContact.y *= planarImpulse;
                     impulseContact.z *= planarImpulse;
 
-                    impulseContact.x = deltaVelocity[0, 0] +
-                        deltaVelocity[1, 0] * friction * impulseContact.y +
-                        deltaVelocity[2, 0] * friction * impulseContact.z;
+                    impulseContact.x = deltaVelocity.data[0] +
+                        deltaVelocity.data[1] * friction * impulseContact.y +
+                        deltaVelocity.data[2] * friction * impulseContact.z;
 
                     impulseContact.x = c.desiredDeltaVelocity / impulseContact.x;
                     impulseContact.y *= friction * impulseContact.x;
@@ -95,14 +96,16 @@ namespace Assets.Scripts.Collisions
             Vector3 impulse = c.contactToWorld.Transform(impulseContact);
 
             Vector3 impulsiveTorque = Vector3.Cross(c.relativeContactPosition[0], impulse);
-            rotationChange[0] = invInertia[0].TransformTranspose(impulsiveTorque);
+            rotationChange[0] = invInertia[0].Transform(impulsiveTorque);
+            velocityChange[0] = Vector3.zero;
             velocityChange[0] = impulse * m[0];
 
             if (objectCount > 1)
             {
-                velocityChange[1] = -impulse * m[1];
+                velocityChange[1] = Vector3.zero;
+                velocityChange[1] = impulse * -m[1];
                 impulsiveTorque = Vector3.Cross(impulse, c.relativeContactPosition[1]);
-                rotationChange[1] = invInertia[1].TransformTranspose(impulsiveTorque);
+                rotationChange[1] = invInertia[1].Transform(impulsiveTorque);
             }
         }
 
@@ -115,9 +118,9 @@ namespace Assets.Scripts.Collisions
         /// <param name="positionChange"> Vector to save the position change to </param>
         /// <param name="rotationDir"> Vector to save the direction of the rotation change into </param>
         /// <param name="rotationAng"> Amount to ritate in rotation dir </param>
-        public static void ResolveOverlap(Contact contact, float[] m, Matrix3[] invInertiaWorld, ref Vector3[] positionChange, ref Vector3[] rotationDir, ref float[] rotationAng)
+        public static void ResolveOverlap(Contact contact, float[] m, Matrix3[] invInertiaWorld, ref Vector3[] positionChange, ref Vector3[] velocityChange, ref Vector3[] rotationDir, ref float[] rotationAng)
         {
-            float angularLimit = 0.05f,
+            float angularLimit = 0.1f,
                 totalInertia = 0;
             float[] angularMove = new float[2],
                 linearMove = new float[2],
@@ -129,7 +132,7 @@ namespace Assets.Scripts.Collisions
             for (uint b = 0; b < objectCount; b++)
             {
                 Vector3 angularInertiaWorld = Vector3.Cross(contact.relativeContactPosition[b], contact.normal);
-                angularInertiaWorld = invInertiaWorld[b].TransformTranspose(angularInertiaWorld);
+                angularInertiaWorld = invInertiaWorld[b].Transform(angularInertiaWorld);
                 angularInertiaWorld = Vector3.Cross(angularInertiaWorld, contact.relativeContactPosition[b]);
                 angularInertia[b] = Vector3.Dot(angularInertiaWorld, contact.normal);
 
@@ -151,7 +154,7 @@ namespace Assets.Scripts.Collisions
             for (int b = objectCount - 1; b >= 0; b--)
             {
                 angularMove[b] = (1 - 2 * b) * contact.depth * angularInertia[b] * invTotalInertia;
-                linearMove[b] = (1 - 2 * b) * contact.depth * m[b] * invTotalInertia;
+                linearMove[b] = (1 - 2 * b) * contact.depth * invTotalInertia * m[b];
 
                 Vector3 projection1 = contact.relativeContactPosition[b];
                 projection1 += contact.normal * Vector3.Dot(-contact.relativeContactPosition[b], contact.normal);
@@ -174,7 +177,7 @@ namespace Assets.Scripts.Collisions
                 if (angularMove[b] != 0f)
                 {
                     t = Vector3.Cross(contact.relativeContactPosition[b], contact.normal);
-                    rotationDirection[b] = invInertiaWorld[b].TransformTranspose(t);
+                    rotationDirection[b] = invInertiaWorld[b].Transform(t);
 
                     rotationAmount[b] = angularMove[b] / angularInertia[b];
                 }
@@ -184,10 +187,13 @@ namespace Assets.Scripts.Collisions
                     rotationAmount[b] = 1f;
                 }
 
-                positionChange[b] = contact.normal * linearMove[b];
+
+                velocityChange[b] = contact.normal * (linearMove[b]/ rotationAmount[b]);
+
+                positionChange[b] = contact.normal * linearMove[b] * 0.25f;
 
                 rotationDir[b] = rotationDirection[b];
-                rotationAng[b] = rotationAmount[b] * 0.5f;
+                rotationAng[b] = rotationAmount[b] * 0.25f;
             }
         }
     }    

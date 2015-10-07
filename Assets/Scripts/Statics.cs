@@ -18,6 +18,7 @@ namespace Assets.Scripts
         public bool BoxesStartAwake;            // If boxes are awake on start
 
         public float BoxesMass;
+        public bool BoxesHaveGravity;
         public float BoxesLinearDamping;
         public float BoxesAngularDamping;
         public float BoxesBounce;
@@ -25,6 +26,7 @@ namespace Assets.Scripts
         public bool BoxesCanSleep;
 
         public float PlayerMass;
+        public bool PlayerHasGravity;
         public float PlayerLinearDamping;
         public float PlayerAngularDamping;
         public float PlayerBounce;

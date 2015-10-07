@@ -29,7 +29,6 @@ namespace Assets.Scripts.Physics
                 controller.AddForce(force);
                 controller.AddTorque(torque);
 
-                // I.e.
                 PositionPhysics.IntegrateRK4(controller.accumulatedLinearForce, controller.accumulatedAngularForce, controller.nextState, dt);
             }
         }

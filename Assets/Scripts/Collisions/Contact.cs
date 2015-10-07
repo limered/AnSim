@@ -110,12 +110,12 @@ namespace Assets.Scripts.Collisions
         {
             var controller = gameObject[0].GetComponent<ObjectController>();
             var body = controller.nextState;
-            contactVelocity = _CalculateLocalVelocity(body.angularVelocity, body.velocity, relativeContactPosition[0], controller.lastFrameAcceleration);
+            contactVelocity = _CalculateLocalVelocity(body.angularVelocity, body.velocity, relativeContactPosition[0], controller.lastFrameAcceleration, controller.nextState.inverseMass);
             if (gameObject[1])
             {
                 controller = gameObject[1].GetComponent<ObjectController>();
                 body = controller.nextState;
-                contactVelocity -= _CalculateLocalVelocity(body.angularVelocity, body.velocity, relativeContactPosition[1], controller.lastFrameAcceleration);
+                contactVelocity -= _CalculateLocalVelocity(body.angularVelocity, body.velocity, relativeContactPosition[1], controller.lastFrameAcceleration, controller.nextState.inverseMass);
             }
         }
 
@@ -126,10 +126,12 @@ namespace Assets.Scripts.Collisions
         /// <param name="vel"> Linear velocity of body </param>
         /// <param name="relativeContactPos"> Relative position to point. </param>
         /// <returns> Local velocity in a certain point </returns>
-        private Vector3 _CalculateLocalVelocity(Vector3 rot, Vector3 vel, Vector3 relativeContactPos, Vector3 lastFrameVelocity)
+        private Vector3 _CalculateLocalVelocity(Vector3 rot, Vector3 vel, Vector3 relativeContactPos, Vector3 lastFrameVelocity, float mass)
         {
-            Vector3 contactVelocity = contactToWorld.TransformTranspose(Vector3.Cross(rot, relativeContactPos) + vel);
-            Vector3 accVelocity = lastFrameVelocity * MainProgram.TIMESTEP;
+            Vector3 velocity = Vector3.Cross(rot, relativeContactPos);
+            velocity += vel;
+            Vector3 contactVelocity = contactToWorld.TransformTranspose(velocity);
+            Vector3 accVelocity = lastFrameVelocity * mass;
             accVelocity = contactToWorld.TransformTranspose(accVelocity);
             accVelocity.x = 0;
             contactVelocity += accVelocity;
@@ -144,13 +146,13 @@ namespace Assets.Scripts.Collisions
             float velocityLimit = 0.25f;
 
             var controller = gameObject[0].GetComponent<ObjectController>();
-            float velocityFromAcc = Vector3.Dot(controller.lastFrameAcceleration * MainProgram.TIMESTEP, normal);
+            float velocityFromAcc = Vector3.Dot(controller.lastFrameAcceleration * controller.nextState.inverseMass, normal);
 
             var restitution = controller.Restitution;
             if (gameObject[1] != null)
             {
                 controller = gameObject[1].GetComponent<ObjectController>();
-                velocityFromAcc -= Vector3.Dot(controller.lastFrameAcceleration * MainProgram.TIMESTEP, normal);
+                velocityFromAcc -= Vector3.Dot(controller.lastFrameAcceleration * controller.nextState.inverseMass, normal);
                 restitution += controller.Restitution;
             }
 

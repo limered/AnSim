@@ -83,10 +83,11 @@ namespace Assets.Scripts
             return q * new Quaternion(v.x, v.y, v.z, 0);
         }
 
-        public static Quaternion QuatAddScaledVector(Quaternion q, Vector3 v, float s)
+        public static Quaternion QuatAddScaledVector(Quaternion t, Vector3 v, float s)
         {
-            Quaternion qv = new Quaternion(v.x * s, v.y * s, v.z * s, 0);
-            return new Quaternion(qv.x * 0.5f, qv.y * 0.5f, qv.z * 0.5f, qv.w * 0.5f);
+            Quaternion q = new Quaternion(v.x * s, v.y * s, v.z * s, 0);
+            q *= t;
+            return new Quaternion(t.x + q.x * 0.5f, t.y + q.y * 0.5f, t.z + q.z * 0.5f, t.w + q.w * 0.5f);
         }
 
         public static Quaternion QuatAddQuat(Quaternion a, Quaternion b)

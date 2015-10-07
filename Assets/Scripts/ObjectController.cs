@@ -23,6 +23,8 @@ namespace Assets.Scripts
         public float Restitution;
         public float Friction;
 
+        public bool hasGravity;
+
         public Vector3 accumulatedLinearForce;
         public Vector3 accumulatedAngularForce;
         public Vector3 lastFrameAcceleration;
@@ -42,6 +44,7 @@ namespace Assets.Scripts
             {
                 var stat = program.GetComponent<Statics>();
                 Mass = stat.PlayerMass;
+                hasGravity = stat.PlayerHasGravity;
                 LinearDamping = stat.PlayerLinearDamping;
                 AngularDamping = stat.PlayerAngularDamping;
                 Restitution = stat.PlayerBounce;
@@ -56,6 +59,7 @@ namespace Assets.Scripts
             {
                 var stat = program.GetComponent<Statics>();
                 Mass = stat.BoxesMass;
+                hasGravity = stat.BoxesHaveGravity;
                 LinearDamping = stat.BoxesLinearDamping;
                 AngularDamping = stat.BoxesAngularDamping;
                 Restitution = stat.BoxesBounce;
@@ -66,9 +70,11 @@ namespace Assets.Scripts
             Mass = (Mass <= 0) ? 1 : Mass;
 
             var transform = GetComponent<Transform>();
-            Vector3 inertiaTensor = new Vector3(Mass * (transform.localScale.y * transform.localScale.y + transform.localScale.z * transform.localScale.z / 12),
-                Mass * (transform.localScale.x * transform.localScale.x + transform.localScale.z * transform.localScale.z / 12),
-                Mass * (transform.localScale.x * transform.localScale.x + transform.localScale.y * transform.localScale.y / 12));
+            Vector3 inertiaTensor = new Vector3(Mass * ((transform.localScale.y * transform.localScale.y + transform.localScale.z * transform.localScale.z) / 12),
+                Mass * ((transform.localScale.x * transform.localScale.x + transform.localScale.z * transform.localScale.z) / 12),
+                Mass * ((transform.localScale.x * transform.localScale.x + transform.localScale.y * transform.localScale.y) / 12));
+
+            inertiaTensor *= 5;
 
             lastState = new State(transform.position, transform.rotation, Mass, inertiaTensor);
             nextState = lastState.Clone();
@@ -105,7 +111,8 @@ namespace Assets.Scripts
         /// <param name="force"> Container for force calculation </param>
         public void Gravity(ref Vector3 force)
         {
-            force.y += MainProgram.GRAVITY * nextState.mass * 0.4f;
+            if (hasGravity)
+                force.y += MainProgram.GRAVITY * nextState.mass * 0.6f;
         }
 
         /// <summary>
@@ -196,6 +203,8 @@ namespace Assets.Scripts
         /// </summary>
         public void  ClearForces()
         {
+            lastFrameAcceleration = accumulatedLinearForce * nextState.inverseMass;
+
             accumulatedLinearForce = Vector3.zero;
             accumulatedAngularForce = Vector3.zero;
         }

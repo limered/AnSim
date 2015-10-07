@@ -136,9 +136,9 @@ namespace Assets.Scripts.Collisions
 
                 coll.contacts[index].MatchAwakeState();
 
-                ResolveOverlap(coll.contacts[index], ref positionChange, ref rotationChange, ref rotationAngle);
+                ResolveOverlap(coll.contacts[index], ref velocityChange, ref rotationChange, ref rotationAngle);
 
-                UpdatePenetrations(coll.contacts, index, ref positionChange, ref rotationChange, ref rotationAngle);
+                UpdatePenetrations(coll.contacts, index, ref velocityChange, ref rotationChange, ref rotationAngle);
 
                 positionIterationsUsed++;
             }
@@ -180,7 +180,7 @@ namespace Assets.Scripts.Collisions
         /// <param name="positionChange"></param>
         /// <param name="rotationChange"></param>
         /// <param name="rotationAmount"></param>
-        private void UpdatePenetrations(List<Contact> c, int index, ref Vector3[] positionChange, ref Vector3[] rotationChange, ref float[] rotationAmount)
+        private void UpdatePenetrations(List<Contact> c, int index, ref Vector3[] velocityChange, ref Vector3[] rotationChange, ref float[] rotationAmount)
         {
             Vector3 cp;
             for (int i = 0; i < c.Count; i++)
@@ -190,14 +190,14 @@ namespace Assets.Scripts.Collisions
                     if (c[i].gameObject[0] == c[index].gameObject[0])
                     {
                         cp = Vector3.Cross(rotationChange[0], c[i].relativeContactPosition[0]);
-                        cp += positionChange[0];
+                        cp += velocityChange[0];
 
                         c[i].depth -= Vector3.Dot(cp, c[i].normal) * rotationAmount[0];
                     }
                     else if (c[i].gameObject[0] == c[index].gameObject[1])
                     {
                         cp = Vector3.Cross(rotationChange[1], c[i].relativeContactPosition[0]);
-                        cp += positionChange[1];
+                        cp += velocityChange[1];
 
                         c[i].depth -= Vector3.Dot(cp, c[i].normal) * rotationAmount[1];
                     }
@@ -207,14 +207,14 @@ namespace Assets.Scripts.Collisions
                     if (c[i].gameObject[1] == c[index].gameObject[0])
                     {
                         cp = Vector3.Cross(rotationChange[0], c[i].relativeContactPosition[1]);
-                        cp += positionChange[0];
+                        cp += velocityChange[0];
 
                         c[i].depth += Vector3.Dot(cp, c[i].normal) * rotationAmount[0];
                     }
                     else if (c[i].gameObject[1] == c[index].gameObject[1])
                     {
                         cp = Vector3.Cross(rotationChange[1], c[i].relativeContactPosition[1]);
-                        cp += positionChange[1];
+                        cp += velocityChange[1];
 
                         c[i].depth += Vector3.Dot(cp, c[i].normal) * rotationAmount[1];
                     }
@@ -282,39 +282,49 @@ namespace Assets.Scripts.Collisions
         /// <param name="positionChange"></param>
         /// <param name="rotationDirection"></param>
         /// <param name="rotationAmount"></param>
-        private void ResolveOverlap(Contact contact, ref Vector3[] positionChange, ref Vector3[] rotationDirection, ref float[] rotationAmount)
+        private void ResolveOverlap(Contact contact, ref Vector3[] velocityChange, ref Vector3[] rotationDirection, ref float[] rotationAmount)
         {
             float[] masses = new float[2];
             Matrix3[] inertias = new Matrix3[2];
             State[] state = new State[2];
             state[0] = contact.gameObject[0].GetComponent<ObjectController>().nextState;
             masses[0] = state[0].inverseMass;
-            inertias[0] = coll.A.inverseInertiaTensorWorld;
+            inertias[0] = state[0].inverseInertiaTensorWorld;
+
+            Vector3[] positionChange = new Vector3[2];
 
             if (contact.gameObject[1] != null)
             {
                 state[1] = contact.gameObject[1].GetComponent<ObjectController>().nextState;
                 masses[1] = state[1].inverseMass;
-                inertias[1] = coll.B.inverseInertiaTensorWorld;
+                inertias[1] = state[1].inverseInertiaTensorWorld;
             }
 
-            ContactResolver.ResolveOverlap(contact, masses, inertias, ref positionChange, ref rotationDirection, ref rotationAmount);
+            ContactResolver.ResolveOverlap(contact, masses, inertias, ref positionChange, ref velocityChange, ref rotationDirection, ref rotationAmount);
 
             Transform[] trans = new Transform[2];
 
             var controller = contact.gameObject[0].GetComponent<ObjectController>();
             if (controller.IsAnimated)
             {
-                state[0].position += positionChange[0] * masses[0];
-                state[0].orientation *= Quaternion.AngleAxis(rotationAmount[0], rotationDirection[0]);
+                state[0].position += positionChange[0];
+                state[0].orientation = AnSimMath.QuatAddScaledVector(state[0].orientation, rotationDirection[0], rotationAmount[0]);
+                //state[0].orientation *= new Quaternion(rotationDirection[0].x * rotationAmount[0] * 0.5f,
+                //    rotationDirection[0].y * rotationAmount[0] * 0.5f,
+                //    rotationDirection[0].z * rotationAmount[0] * 0.5f,
+                //    0); //Quaternion.AngleAxis(rotationAmount[0], rotationDirection[0]);
             }
 
             controller = contact.gameObject[1].GetComponent<ObjectController>();
 
             if (controller.IsAnimated && contact.gameObject[1] != null)
             {
-                state[1].position += positionChange[1] * masses[1];
-                state[1].orientation *= Quaternion.AngleAxis(rotationAmount[1], rotationDirection[1]);
+                state[1].position += positionChange[1];
+                state[1].orientation = AnSimMath.QuatAddScaledVector(state[1].orientation, rotationDirection[1], rotationAmount[1]);
+                //state[1].orientation *= new Quaternion(rotationDirection[1].x * rotationAmount[1] * 0.5f,
+                //    rotationDirection[1].y * rotationAmount[1] * 0.5f,
+                //    rotationDirection[1].z * rotationAmount[1] * 0.5f,
+                //    0); //Quaternion.AngleAxis(rotationAmount[1], rotationDirection[1]);
             }
         }
 
@@ -334,16 +344,16 @@ namespace Assets.Scripts.Collisions
             controllers[0] = c.gameObject[0].GetComponent<ObjectController>();
             states[0] = c.gameObject[0].GetComponent<ObjectController>().nextState;
             masses[0] = states[0].inverseMass;
-            inertias[0] = new Matrix3();
-            inertias[0].SetDiagonal(states[0].inverseInertiaTensor);
+            inertias[0] =  states[0].inverseInertiaTensorWorld; // new Matrix3();
+            //inertias[0].SetDiagonal(states[0].inverseInertiaTensor);
 
             if (c.gameObject[1] != null)
             {
                 controllers[1] = c.gameObject[1].GetComponent<ObjectController>();
                 states[1] = c.gameObject[1].GetComponent<ObjectController>().nextState;
                 masses[1] = states[1].inverseMass;
-                inertias[1] = new Matrix3();
-                inertias[1].SetDiagonal(states[1].inverseInertiaTensor);
+                inertias[1] = states[1].inverseInertiaTensorWorld;// new Matrix3();
+                //inertias[1].SetDiagonal(states[1].inverseInertiaTensor);
             }
 
             ContactResolver.ResolveCollision(c, masses, inertias, ref velocityChange, ref rotationChange);

@@ -50,7 +50,7 @@ namespace Assets.Scripts.Collisions
             inverseInertiaTensorLocal.SetDiagonal(state.inverseInertiaTensor);
 
             // Last frame acceleration for collision handling
-            controller.lastFrameAcceleration = controller.accumulatedLinearForce * controller.nextState.inverseMass;
+            //controller.lastFrameAcceleration = controller.accumulatedLinearForce * controller.nextState.inverseMass;
 
             _CalculateDerivedData();
         }

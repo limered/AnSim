@@ -45,12 +45,12 @@ namespace Assets.Scripts.Collisions
             {
                 cube = go;
                 objectControl = cube.GetComponent<ObjectController>();
-
                 objectControl.ClearForces();
                 if (objectControl.isAwake)
                 {
                     UpdateCollider(objectControl, cube);
                     objectControl.lastState = objectControl.nextState.Clone();
+                    objectControl.nextState.CalculateDerivedData();
                     objectControl.UpdateMotion();
 
                     wallPhase.CollideWithWalls(ref cube, walls);

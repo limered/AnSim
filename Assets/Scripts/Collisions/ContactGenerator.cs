@@ -217,6 +217,7 @@ namespace Assets.Scripts.Collisions
 
             for (int i = 0; i < cnum; i++)
             {
+                depths[i] = (depths[i] < 0) ? -depths[i] : depths[i];
                 coll.AddContact(new Contact(coll.object_A, coll.object_B, points[i] + Ca, normal, depths[i], coll.code));
             }
         }

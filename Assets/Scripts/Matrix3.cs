@@ -4,7 +4,7 @@ namespace Assets.Scripts
 {
     internal class Matrix3
     {
-        private float[] data = new float[9];
+        public float[] data = new float[9];
 
         public Matrix3()
         {
