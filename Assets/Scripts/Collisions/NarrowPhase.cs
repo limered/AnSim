@@ -7,12 +7,16 @@ namespace Assets.Scripts.Collisions
     internal class NarrowPhase
     {
         private CollisionInfo coll = new CollisionInfo();
+        private BatchingProcessor batcher = new BatchingProcessor();
 
         public Dictionary<int, GameObject> PerformPhase(List<GameObject[]> pairs)
         {
+            if (pairs.Count <= 0) return new Dictionary<int, GameObject>();
+
             Dictionary<int, GameObject> moved = new Dictionary<int, GameObject>();
 
             GameObject cube0, cube1;
+            batcher.Clear();
             for (int i = 0; i < pairs.Count; i++)
             {
                 cube0 = pairs[i][0];
@@ -21,6 +25,9 @@ namespace Assets.Scripts.Collisions
                 if (collision)
                 {
                     ContactGenerator.ComputeCollisionInfo(ref coll);
+
+                    //batcher.AddContacts(coll.contacts);
+
                     _CalculateCollisionResponse(cube0, cube1);
 
                     if (!moved.ContainsKey(cube0.GetInstanceID()))
@@ -29,6 +36,12 @@ namespace Assets.Scripts.Collisions
                         moved.Add(cube1.GetInstanceID(), cube1);
                 }
             }
+            //batcher.BatchContacts();
+            //foreach (ContactBatch cb in batcher.batches)
+            //{
+            //    var cList = cb.GetAllContacts();
+            //    CalculateCollisionResponse(cList);
+            //}
             return moved;
         }
 
@@ -104,6 +117,69 @@ namespace Assets.Scripts.Collisions
                         return true;
                 }
             return false;
+        }
+
+
+        private void CalculateCollisionResponse(List<Contact> cList)
+        {
+            if (cList.Count <= 0) return;
+            int i, index;
+            Vector3[] positionChange = new Vector3[2],
+                rotationChange = new Vector3[2],
+                velocityChange = new Vector3[2];
+            float[] rotationAngle = new float[2];
+            float max;
+
+            int positionIterationsUsed = 0;
+            while (positionIterationsUsed < 1)
+            {
+
+                max = MainProgram.POSITION_EPSOLON;
+                index = -1;
+                for (i = 0; i < cList.Count; i++)
+                {
+                    if (cList[i].depth > max)
+                    {
+                        max = cList[i].depth;
+                        index = i;
+                    }
+                }
+                if (index == -1) break;
+
+                cList[index].MatchAwakeState();
+
+                ResolveOverlap(cList[index], ref velocityChange, ref rotationChange, ref rotationAngle);
+
+                //UpdatePenetrations(cList, index, ref velocityChange, ref rotationChange, ref rotationAngle);
+
+                positionIterationsUsed++;
+            }
+
+            max = 0;
+
+            int velocityIterationsUsed = 0;
+            while (velocityIterationsUsed < 1)
+            {
+                max = MainProgram.VELOCITY_EPSILON;
+                index = -1;
+                for (i = 0; i < cList.Count; i++)
+                {
+                    if (cList[i].desiredDeltaVelocity > max)
+                    {
+                        max = cList[i].desiredDeltaVelocity;
+                        index = i;
+                    }
+                }
+                if (index == -1) break;
+
+                cList[index].MatchAwakeState();
+
+                ResolveCollision(cList[index], ref velocityChange, ref rotationChange);
+
+                //UpdatePenetrationsVel(cList, index, ref velocityChange, ref rotationChange);
+
+                velocityIterationsUsed++;
+            }
         }
 
         /// <summary>

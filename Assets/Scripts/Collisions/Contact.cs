@@ -193,6 +193,11 @@ namespace Assets.Scripts.Collisions
             }
         }
 
+        public string UniqueId()
+        {
+            return gameObject[0].GetInstanceID() + "_" + gameObject[1].GetInstanceID() + "_" + point.GetHashCode();
+        }
+
         /************************ not used atm. Caching of contacts *************************/
 
         public void Update(Vector3 point, float depth)
