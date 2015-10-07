@@ -12,7 +12,7 @@ namespace Assets.Scripts
         static public float GRAVITY = -9.8f;
 
         public static float POSITION_EPSOLON = 0f;
-        public static float SLEEP_EPSILON = 0.7f;
+        public static float SLEEP_EPSILON = 2f;
         public static float VELOCITY_EPSILON = 0f;
 
         public GameObject BigCubePrefab;

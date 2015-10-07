@@ -58,8 +58,7 @@ namespace Assets.Scripts.Collisions
 
             var wallController = wall.GetComponent<WallController>();
 
-            Matrix3 inertia = new Matrix3();
-            inertia.SetDiagonal(rigidbody.inertiaTensor);
+            Matrix3 inertia = rigidbody.inverseInertiaTensorWorld;
 
             Vector3 force = Vector3.zero;
             Vector3 torque = Vector3.zero;
@@ -82,10 +81,6 @@ namespace Assets.Scripts.Collisions
             if (!isWater && maxPenetration > 0)
             {
                 rigidbody.position += wallController.normal * maxPenetration * elasticity;
-                //controller.nextState.momentum += force * controller.nextState.inverseMass;
-                //controller.nextState.angularMomentum += controller.nextState.inverseInertiaTensorLocal.Transform(torque);
-                //controller.nextState.RecalculatePosition();
-                //controller.nextState.RecalculateRotation();
                 controller.AddForce(force, false);
                 controller.AddTorque(torque);
             }

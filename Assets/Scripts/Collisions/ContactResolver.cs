@@ -188,12 +188,12 @@ namespace Assets.Scripts.Collisions
                 }
 
 
-                velocityChange[b] = contact.normal * (linearMove[b]/ rotationAmount[b]);
+                velocityChange[b] = contact.normal * (linearMove[b] / rotationAmount[b]);
 
-                positionChange[b] = contact.normal * linearMove[b] * 0.25f;
+                positionChange[b] = contact.normal * linearMove[b];
 
                 rotationDir[b] = rotationDirection[b];
-                rotationAng[b] = rotationAmount[b] * 0.5f;
+                rotationAng[b] = rotationAmount[b];
             }
         }
     }    

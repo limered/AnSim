@@ -100,9 +100,9 @@ namespace Assets.Scripts.Collisions
 
         public void Clear()
         {
-            contacts = new Dictionary<int, Dictionary<int, List<Contact>>>();
-            batches = new List<ContactBatch>();
-            batchLocations = new Dictionary<int, int>();
+            contacts.Clear();
+            batches.Clear();
+            batchLocations.Clear();
         }
     }
 }

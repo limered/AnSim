@@ -26,22 +26,24 @@ namespace Assets.Scripts.Collisions
                 {
                     ContactGenerator.ComputeCollisionInfo(ref coll);
 
-                    //batcher.AddContacts(coll.contacts);
+                    batcher.AddContacts(coll.contacts);
 
-                    _CalculateCollisionResponse(cube0, cube1);
+                    //_CalculateCollisionResponse(cube0, cube1);
 
                     if (!moved.ContainsKey(cube0.GetInstanceID()))
                         moved.Add(cube0.GetInstanceID(), cube0);
                     if (!moved.ContainsKey(cube1.GetInstanceID()))
                         moved.Add(cube1.GetInstanceID(), cube1);
+                    coll.Clear();
                 }
             }
             //batcher.BatchContacts();
-            //foreach (ContactBatch cb in batcher.batches)
-            //{
-            //    var cList = cb.GetAllContacts();
-            //    CalculateCollisionResponse(cList);
-            //}
+            foreach (ContactBatch cb in batcher.batches)
+            {
+                var cList = cb.GetAllContacts();
+                CalculateCollisionResponse(ref cList);
+            }
+            coll.Clear();
             return moved;
         }
 
@@ -120,10 +122,10 @@ namespace Assets.Scripts.Collisions
         }
 
 
-        private void CalculateCollisionResponse(List<Contact> cList)
+        private void CalculateCollisionResponse(ref Contact[] cList)
         {
-            if (cList.Count <= 0) return;
-            int i, index;
+            if (cList.Length <= 0) return;
+            Contact current;
             Vector3[] positionChange = new Vector3[2],
                 rotationChange = new Vector3[2],
                 velocityChange = new Vector3[2];
@@ -131,52 +133,51 @@ namespace Assets.Scripts.Collisions
             float max;
 
             int positionIterationsUsed = 0;
-            while (positionIterationsUsed < 1)
-            {
+            while (positionIterationsUsed < cList.Length * 0.5) {
 
-                max = MainProgram.POSITION_EPSOLON;
-                index = -1;
-                for (i = 0; i < cList.Count; i++)
+                max = 0f;
+                current = null;
+                foreach (Contact c in cList)
                 {
-                    if (cList[i].depth > max)
+                    if (c.depth > max)
                     {
-                        max = cList[i].depth;
-                        index = i;
+                        max = c.depth;
+                        current = c;
                     }
                 }
-                if (index == -1) break;
+                if (current == null) break;
 
-                cList[index].MatchAwakeState();
+                current.MatchAwakeState();
 
-                ResolveOverlap(cList[index], ref velocityChange, ref rotationChange, ref rotationAngle);
+                ResolveOverlap(ref current, ref velocityChange, ref rotationChange, ref rotationAngle);
 
-                //UpdatePenetrations(cList, index, ref velocityChange, ref rotationChange, ref rotationAngle);
+                UpdatePenetrations(ref cList, ref current, ref velocityChange, ref rotationChange, ref rotationAngle);
 
                 positionIterationsUsed++;
             }
 
-            max = 0;
+            max = 0f;
 
             int velocityIterationsUsed = 0;
-            while (velocityIterationsUsed < 1)
+            while (velocityIterationsUsed < cList.Length * 0.5)
             {
-                max = MainProgram.VELOCITY_EPSILON;
-                index = -1;
-                for (i = 0; i < cList.Count; i++)
+                max = 0f;
+                current = null;
+                foreach (Contact c in cList)
                 {
-                    if (cList[i].desiredDeltaVelocity > max)
+                    if (c.desiredDeltaVelocity > max)
                     {
-                        max = cList[i].desiredDeltaVelocity;
-                        index = i;
+                        max = c.desiredDeltaVelocity;
+                        current = c;
                     }
                 }
-                if (index == -1) break;
+                if (current == null) break;
 
-                cList[index].MatchAwakeState();
+                current.MatchAwakeState();
 
-                ResolveCollision(cList[index], ref velocityChange, ref rotationChange);
+                ResolveCollision(ref current, ref velocityChange, ref rotationChange);
 
-                //UpdatePenetrationsVel(cList, index, ref velocityChange, ref rotationChange);
+                UpdatePenetrationsVel(ref cList, ref current, ref velocityChange, ref rotationChange);
 
                 velocityIterationsUsed++;
             }
@@ -213,10 +214,10 @@ namespace Assets.Scripts.Collisions
                 if (index == -1) break;
 
                 coll.contacts[index].MatchAwakeState();
+                var curr = coll.contacts[index];
+                ResolveOverlap(ref curr, ref velocityChange, ref rotationChange, ref rotationAngle);
 
-                ResolveOverlap(coll.contacts[index], ref velocityChange, ref rotationChange, ref rotationAngle);
-
-                UpdatePenetrations(coll.contacts, index, ref velocityChange, ref rotationChange, ref rotationAngle);
+                //UpdatePenetrations(ref coll.contacts, ref curr, ref velocityChange, ref rotationChange, ref rotationAngle);
 
                 positionIterationsUsed++;
             }
@@ -240,9 +241,9 @@ namespace Assets.Scripts.Collisions
 
                 coll.contacts[index].MatchAwakeState();
 
-                ResolveCollision(coll.contacts[index], ref velocityChange, ref rotationChange);
+                //ResolveCollision(coll.contacts[index], ref velocityChange, ref rotationChange);
 
-                UpdatePenetrationsVel(coll.contacts, index, ref velocityChange, ref rotationChange);
+                //UpdatePenetrationsVel(coll.contacts, index, ref velocityChange, ref rotationChange);
 
                 velocityIterationsUsed++;
             }
@@ -258,21 +259,21 @@ namespace Assets.Scripts.Collisions
         /// <param name="positionChange"></param>
         /// <param name="rotationChange"></param>
         /// <param name="rotationAmount"></param>
-        private void UpdatePenetrations(List<Contact> c, int index, ref Vector3[] velocityChange, ref Vector3[] rotationChange, ref float[] rotationAmount)
+        private void UpdatePenetrations(ref Contact[] c, ref Contact current, ref Vector3[] velocityChange, ref Vector3[] rotationChange, ref float[] rotationAmount)
         {
             Vector3 cp;
-            for (int i = 0; i < c.Count; i++)
+            for (int i = 0; i < c.Length; i++)
             {
                 if (c[i].gameObject[0] != null)
                 {
-                    if (c[i].gameObject[0] == c[index].gameObject[0])
+                    if (c[i].gameObject[0] == current.gameObject[0])
                     {
                         cp = Vector3.Cross(rotationChange[0], c[i].relativeContactPosition[0]);
                         cp += velocityChange[0];
 
                         c[i].depth -= Vector3.Dot(cp, c[i].normal) * rotationAmount[0];
                     }
-                    else if (c[i].gameObject[0] == c[index].gameObject[1])
+                    else if (c[i].gameObject[0] == current.gameObject[1])
                     {
                         cp = Vector3.Cross(rotationChange[1], c[i].relativeContactPosition[0]);
                         cp += velocityChange[1];
@@ -282,14 +283,14 @@ namespace Assets.Scripts.Collisions
                 }
                 if (c[i].gameObject[1] != null)
                 {
-                    if (c[i].gameObject[1] == c[index].gameObject[0])
+                    if (c[i].gameObject[1] == current.gameObject[0])
                     {
                         cp = Vector3.Cross(rotationChange[0], c[i].relativeContactPosition[1]);
                         cp += velocityChange[0];
 
                         c[i].depth += Vector3.Dot(cp, c[i].normal) * rotationAmount[0];
                     }
-                    else if (c[i].gameObject[1] == c[index].gameObject[1])
+                    else if (c[i].gameObject[1] == current.gameObject[1])
                     {
                         cp = Vector3.Cross(rotationChange[1], c[i].relativeContactPosition[1]);
                         cp += velocityChange[1];
@@ -307,14 +308,14 @@ namespace Assets.Scripts.Collisions
         /// <param name="index"> index of the last corrected contact </param>
         /// <param name="velocityChange"> last/future velocity change of object </param>
         /// <param name="rotationChange"> last/future rotational velocity change of object </param>
-        private void UpdatePenetrationsVel(List<Contact> c, int index, ref Vector3[] velocityChange, ref Vector3[] rotationChange)
+        private void UpdatePenetrationsVel(ref Contact[] c, ref Contact current, ref Vector3[] velocityChange, ref Vector3[] rotationChange)
         {
             Vector3 cp;
-            for (int i = 0; i < c.Count; i++)
+            for (int i = 0; i < c.Length; i++)
             {
                 if (c[i].gameObject[0] != null)
                 {
-                    if (c[i].gameObject[0] == c[index].gameObject[0])
+                    if (c[i].gameObject[0] == current.gameObject[0])
                     {
                         cp = Vector3.Cross(rotationChange[0], c[i].relativeContactPosition[0]);
                         cp += velocityChange[0];
@@ -322,7 +323,7 @@ namespace Assets.Scripts.Collisions
                         c[i].contactVelocity += c[i].contactToWorld.TransformTranspose(cp);
                         c[i].CalculateDesiredDeltaVelocity();
                     }
-                    else if (c[i].gameObject[0] == c[index].gameObject[1])
+                    else if (c[i].gameObject[0] == current.gameObject[1])
                     {
                         cp = Vector3.Cross(rotationChange[1], c[i].relativeContactPosition[0]);
                         cp += velocityChange[1];
@@ -333,7 +334,7 @@ namespace Assets.Scripts.Collisions
                 }
                 if (c[i].gameObject[1] != null)
                 {
-                    if (c[i].gameObject[1] == c[index].gameObject[0])
+                    if (c[i].gameObject[1] == current.gameObject[0])
                     {
                         cp = Vector3.Cross(rotationChange[0], c[i].relativeContactPosition[1]);
                         cp += velocityChange[0];
@@ -341,7 +342,7 @@ namespace Assets.Scripts.Collisions
                         c[i].contactVelocity -= c[i].contactToWorld.TransformTranspose(cp);
                         c[i].CalculateDesiredDeltaVelocity();
                     }
-                    else if (c[i].gameObject[1] == c[index].gameObject[1])
+                    else if (c[i].gameObject[1] == current.gameObject[1])
                     {
                         cp = Vector3.Cross(rotationChange[1], c[i].relativeContactPosition[1]);
                         cp += velocityChange[1];
@@ -360,7 +361,7 @@ namespace Assets.Scripts.Collisions
         /// <param name="positionChange"></param>
         /// <param name="rotationDirection"></param>
         /// <param name="rotationAmount"></param>
-        private void ResolveOverlap(Contact contact, ref Vector3[] velocityChange, ref Vector3[] rotationDirection, ref float[] rotationAmount)
+        private void ResolveOverlap(ref Contact contact, ref Vector3[] velocityChange, ref Vector3[] rotationDirection, ref float[] rotationAmount)
         {
             float[] masses = new float[2];
             Matrix3[] inertias = new Matrix3[2];
@@ -412,7 +413,7 @@ namespace Assets.Scripts.Collisions
         /// <param name="c"></param>
         /// <param name="velocityChange"></param>
         /// <param name="rotationChange"></param>
-        private void ResolveCollision(Contact c, ref Vector3[] velocityChange, ref Vector3[] rotationChange)
+        private void ResolveCollision(ref Contact c, ref Vector3[] velocityChange, ref Vector3[] rotationChange)
         {
             State[] states = new State[2];
             float[] masses = new float[2];

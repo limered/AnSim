@@ -14,10 +14,10 @@ namespace Assets.Scripts.Collisions
             return contacts.ContainsKey(c.UniqueId());
         }
 
-        public List<Contact> GetAllContacts()
+        public Contact[] GetAllContacts()
         {
             IEnumerable<Contact> res = contacts.Values;
-            return res.ToList<Contact>();
+            return res.ToArray();
         }
 
         public void AddContact(Contact c)

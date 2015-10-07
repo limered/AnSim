@@ -200,42 +200,42 @@ namespace Assets.Scripts.Collisions
 
         /************************ not used atm. Caching of contacts *************************/
 
-        public void Update(Vector3 point, float depth)
-        {
-            this.point = point;
-            this.depth = depth;
-        }
+        //public void Update(Vector3 point, float depth)
+        //{
+        //    this.point = point;
+        //    this.depth = depth;
+        //}
 
-        public void Update(Vector3 point, float depth, Vector3 normal)
-        {
-            this.point = point;
-            this.depth = depth;
-            this.normal = normal;
-        }
+        //public void Update(Vector3 point, float depth, Vector3 normal)
+        //{
+        //    this.point = point;
+        //    this.depth = depth;
+        //    this.normal = normal;
+        //}
 
-        public static bool operator ==(Contact a, Contact b)
-        {
-            return a.GetHashCode() == b.GetHashCode();
-        }
+        //public static bool operator ==(Contact a, Contact b)
+        //{
+        //    return a.GetHashCode() == b.GetHashCode();
+        //}
 
-        public static bool operator !=(Contact a, Contact b)
-        {
-            return a.GetHashCode() != b.GetHashCode();
-        }
+        //public static bool operator !=(Contact a, Contact b)
+        //{
+        //    return a.GetHashCode() != b.GetHashCode();
+        //}
 
-        public override bool Equals(object obj)
-        {
-            if (obj == null || GetType() != obj.GetType())
-            {
-                return false;
-            }
+        //public override bool Equals(object obj)
+        //{
+        //    if (obj == null || GetType() != obj.GetType())
+        //    {
+        //        return false;
+        //    }
 
-            return (GetHashCode() == obj.GetHashCode());
-        }
+        //    return (GetHashCode() == obj.GetHashCode());
+        //}
 
-        public override int GetHashCode()
-        {
-            return code.GetHashCode() + depth.GetHashCode() + point.GetHashCode() + normal.GetHashCode();
-        }
+        //public override int GetHashCode()
+        //{
+        //    return code.GetHashCode() + depth.GetHashCode() + point.GetHashCode() + normal.GetHashCode();
+        //}
     }
 }
