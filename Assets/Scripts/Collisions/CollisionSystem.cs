@@ -11,6 +11,8 @@ namespace Assets.Scripts.Collisions
         private WallCollisionSolver wallPhase = new WallCollisionSolver();
         private BroadPhase broadPhase = new BroadPhase();
         private NarrowPhase narrowPhase = new NarrowPhase();
+        private List<GameObject[]> collisions;
+        private int counter = 0;
 
         /// <summary>
         /// Starts the collision calculation process
@@ -18,12 +20,17 @@ namespace Assets.Scripts.Collisions
         /// <param name="dt"> timestep </param>
         /// <param name="cubes"> array containing all cubes </param>
         /// <param name="walls"> array containing all walls </param>
-        public void CalculateCollisions(float dt, List<GameObject> cubes, GameObject[] walls)
+        public void CalculateCollisions(float dt, List<GameObject> cubes, GameObject[] walls, ref Octree octreeGrid)
         {
+            counter++;
             _CollideWithWalls(cubes, walls);
 
-            var collisions = broadPhase.PerformPhase(cubes);
+            collisions = new List<GameObject[]>();
+            broadPhase.PerformPhase(cubes, ref collisions, ref octreeGrid);
 
+            //Debug.Log("Octree collisions: " + collisions.Count);
+            //Debug.Log("octreeGrid: " + octreeGrid.allCubes.Count);
+            //Debug.Log("Update called: " + counter);
             var moved = narrowPhase.PerformPhase(collisions);
 
             foreach (KeyValuePair<int, GameObject> kv in moved)

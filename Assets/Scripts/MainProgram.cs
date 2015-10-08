@@ -19,6 +19,9 @@ namespace Assets.Scripts
         public Camera MainCamera;
         public GameObject SmallCubePrefab;
         public GameObject[] Walls;
+        
+        // unitsX/Y/Z: size of the game Scene, depth: start octree depth
+        public Octree octreeGrid = new Octree(60, 60, 60, 0);
 
         private float _accumulator = 0;
         private CollisionSystem _collisions = new CollisionSystem();
@@ -31,8 +34,8 @@ namespace Assets.Scripts
         /// </summary>
         private void _AddPlayer()
         {
-            var playerCube = GameObject.Find("BigCube");
-            _cubes.Add(playerCube);
+            BigCubePrefab = GameObject.Find("BigCube");
+            _cubes.Add(BigCubePrefab);
         }
 
         /// <summary>
@@ -88,7 +91,16 @@ namespace Assets.Scripts
                 statics.BoxesZ.x, (int)statics.BoxesZ.y,
                 statics.BoxesDistance,
                 statics.BoxesStartAwake);
+
+            //for (int i = 0; i < _cubes.Count; i++)
+            //{
+            //    octreeGrid.addCube(_cubes[i]);
+            //}
+            //var test = 1 + 2;
         }
+
+        public float LockedY = 0;
+        public float LockedZ = 0;
 
         /// <summary>
         /// Main update method for simulation.
@@ -96,12 +108,12 @@ namespace Assets.Scripts
         private void Update()
         {
             var dt = Time.deltaTime;
-            dt = (dt >= 0.02f) ? 0.02f : dt;
+            dt = (dt >= TIMESTEP) ? TIMESTEP : dt;
             _accumulator += dt;
 
             while (_accumulator > TIMESTEP)
             {
-                _collisions.CalculateCollisions(TIMESTEP, _cubes, Walls);
+                _collisions.CalculateCollisions(TIMESTEP, _cubes, Walls, ref octreeGrid);
                 _physics.IntegratePhysics(TIMESTEP, _cubes);
 
                 _accumulator -= TIMESTEP;
@@ -109,8 +121,8 @@ namespace Assets.Scripts
 
             var alpha = _accumulator / TIMESTEP;
             _rendering.LateUpdate(alpha, _cubes);
-
-            //Eventuell die Kamera hier bewegen um den würfel zu verfolgen? TODO
+            
+            //transform.position = new Vector3(_accumulator, LockedY, LockedZ);
         }
     }
 }

@@ -1,4 +1,5 @@
-﻿using Assets.Scripts.Collisions;
+﻿using System;
+using Assets.Scripts.Collisions;
 using Assets.Scripts.Physics;
 using UnityEngine;
 
@@ -69,7 +70,16 @@ namespace Assets.Scripts
 
             Mass = (Mass <= 0) ? 1 : Mass;
 
+           
+
             var transform = GetComponent<Transform>();
+            //if (isPlayer)
+            //{
+            //    print("Mass: " + Mass);
+            //    print("LocalDataStoreSlot Scale X: " + transform.localScale.x);
+            //    print("transform.position: " + transform.position);
+            //    print("((transform.localScale.y * transform.localScale.y + transform.localScale.z * transform.localScale.z) / 12): " + ((transform.localScale.y * transform.localScale.y + transform.localScale.z * transform.localScale.z) / 12));
+            //}
             Vector3 inertiaTensor = new Vector3(Mass * ((transform.localScale.y * transform.localScale.y + transform.localScale.z * transform.localScale.z) / 12),
                 Mass * ((transform.localScale.x * transform.localScale.x + transform.localScale.z * transform.localScale.z) / 12),
                 Mass * ((transform.localScale.x * transform.localScale.x + transform.localScale.y * transform.localScale.y) / 12));
@@ -80,6 +90,13 @@ namespace Assets.Scripts
             nextState = lastState.Clone();
             anSimCollider = new OrientedBox3D();
             anSimCollider.UpdateDataFromObject(gameObject);
+
+
+            //if (isPlayer)
+            //{
+
+            //    Debug.Log("center Oriented3D: " + anSimCollider.center);
+            //}
         }
 
         /// <summary>
