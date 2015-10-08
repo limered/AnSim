@@ -127,7 +127,7 @@ namespace Assets.Scripts.Collisions
                         for (int k = 0; k < cell.Count; k++)
                         {
                             body[0] = cell[k];
-                            for (int l = 0; l < cell.Count; l++)
+                            for (int l = k; l < cell.Count; l++)
                             {
                                 body[1] = cell[l];
                                 if (body[0] == body[1]) continue;

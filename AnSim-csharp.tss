@@ -16,5 +16,11 @@
     <ArrayOfString>
       <string>C:\Users\livei\Documents\GitHubVisualStudio\AnSim\Assets\Scripts\MainProgram.cs</string>
     </ArrayOfString>
+    <ArrayOfString>
+      <string>C:\Users\livei\Documents\GitHubVisualStudio\AnSim\Assets\Scripts\ObjectController.cs</string>
+    </ArrayOfString>
+    <ArrayOfString>
+      <string>C:\Users\livei\Documents\GitHubVisualStudio\AnSim\Assets\Scripts\Collisions\Octree.cs</string>
+    </ArrayOfString>
   </ArrayOfArrayOfString>
 </ArrayOfArrayOfArrayOfString>
