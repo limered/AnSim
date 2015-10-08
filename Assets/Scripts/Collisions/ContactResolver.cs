@@ -120,7 +120,7 @@ namespace Assets.Scripts.Collisions
         /// <param name="rotationAng"> Amount to ritate in rotation dir </param>
         public static void ResolveOverlap(Contact contact, float[] m, Matrix3[] invInertiaWorld, ref Vector3[] positionChange, ref Vector3[] velocityChange, ref Vector3[] rotationDir, ref float[] rotationAng)
         {
-            float angularLimit = 0.1f,
+            float angularLimit = 0.5f,
                 totalInertia = 0;
             float[] angularMove = new float[2],
                 linearMove = new float[2],
@@ -190,10 +190,10 @@ namespace Assets.Scripts.Collisions
 
                 velocityChange[b] = contact.normal * (linearMove[b]/ rotationAmount[b]);
 
-                positionChange[b] = contact.normal * linearMove[b] * 0.25f;
+                positionChange[b] = contact.normal * linearMove[b];
 
                 rotationDir[b] = rotationDirection[b];
-                rotationAng[b] = rotationAmount[b] * 0.5f;
+                rotationAng[b] = rotationAmount[b];
             }
         }
     }    

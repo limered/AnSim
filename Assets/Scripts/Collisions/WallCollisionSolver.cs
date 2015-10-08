@@ -82,10 +82,6 @@ namespace Assets.Scripts.Collisions
             if (!isWater && maxPenetration > 0)
             {
                 rigidbody.position += wallController.normal * maxPenetration * elasticity;
-                //controller.nextState.momentum += force * controller.nextState.inverseMass;
-                //controller.nextState.angularMomentum += controller.nextState.inverseInertiaTensorLocal.Transform(torque);
-                //controller.nextState.RecalculatePosition();
-                //controller.nextState.RecalculateRotation();
                 controller.AddForce(force, false);
                 controller.AddTorque(torque);
             }

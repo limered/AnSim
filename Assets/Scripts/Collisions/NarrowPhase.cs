@@ -122,7 +122,7 @@ namespace Assets.Scripts.Collisions
             float max;
 
             int positionIterationsUsed = 0;
-            while (positionIterationsUsed < 4)
+            while (positionIterationsUsed < 16)
             {
                 max = MainProgram.POSITION_EPSOLON;
                 index = -1;
