@@ -5,19 +5,22 @@ namespace Assets.Scripts
     /// <summary>
     /// Player class.
     /// </summary>
-    public class BigCubeController : ObjectController
+    internal class BigCubeController : ObjectController
     {
         public float MovementSpeed;
-        
+        public float AffectingRadius;
+        public float PushForce;
+        public bool Collision;
+
         /// <summary>
         /// Overrides base class implementation and adds a input force calculation.
         /// </summary>
         /// <param name="force"></param>
-        public override void LinearForces(Vector3 force)
+        public override void LinearForces(ref Vector3 force)
         {
             if (!IsAnimated) return;
 
-            base.LinearForces(force);
+            base.LinearForces(ref force);
 
             force += InputForce();
         }
@@ -45,15 +48,16 @@ namespace Assets.Scripts
             {
                 result.x -= MovementSpeed;
             }
+            if (Input.GetKey(KeyCode.F))
+            {
+                result.y -= MovementSpeed;
+            }
+            if (Input.GetKey(KeyCode.R))
+            {
+                result.y += MovementSpeed;
+            }
 
             return result;
-        }
-
-        /// <summary>
-        /// Only for testing
-        /// </summary>
-        void Update() {
-            GetComponent<Transform>().position += InputForce();
         }
     }
 }

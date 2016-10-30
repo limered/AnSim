@@ -1,50 +1,67 @@
 ﻿using UnityEngine;
 
-namespace Assets.Scripts.Physics
+namespace Assets.Scripts.Collisions
 {
     /// <summary>
-    /// Contains position and rotation information for an object. See "gaffer on games", "Ultrapede".
+    /// (Cube Collider) Generates positions of vertices from a state object and saves them for colision calculation.
     /// </summary>
-    internal class State
+    internal class OrientedBox3D
     {
-        public Vector3 position;                // Physical Position of Object
-        public Vector3 momentum;                // Current Momentum in kg*m/s
+        public Vector3 center { get; private set; }
+        public Vector3[] axis { get; private set; }
+        public float[] extents { get; private set; }
 
-        public Quaternion orientation;          // Current Orientation of Physics Object
-        public Vector3 angularMomentum;         // Current angular momentum
-
-        public Vector3 velocity;                // Calculated velocity of object (m/s)
-        public Quaternion spin;                 // Quaternion rate of change in orientation.
-        public Vector3 angularVelocity;         // Velocity of Angular change
-
-        public float mass;                      // Mass of object
-        public float inverseMass;
-        public Vector3 inertiaTensor;           // Inertia Tensor of object (We use only cubes in physics sim, so only one value)
-        public Vector3 inverseInertiaTensor;
-
+        public Vector3 velocity { get; private set; }
+        public Quaternion orientation { get; private set; }
         public Matrix4x4 transform = new Matrix4x4();
         public Matrix3 inverseInertiaTensorLocal = new Matrix3();
         public Matrix3 inverseInertiaTensorWorld = new Matrix3();
 
-        public State(Vector3 startPosition, Quaternion startOriantation, float mass, Vector3 inertiaTensor)
+        public OrientedBox3D()
         {
-            position = startPosition;
-            orientation = startOriantation;
-            this.mass = mass;
-            inverseMass = 1.0f / mass;
-            this.inertiaTensor = inertiaTensor;
-            inverseInertiaTensor = Vector3.zero;
-            for (int i = 0; i < 3; i++) inverseInertiaTensor[i] = 1.0f / inertiaTensor[i];
-            inverseInertiaTensorLocal.SetDiagonal(inverseInertiaTensor);
+            center = new Vector3();
+            axis = new Vector3[3];
+            extents = new float[3];
         }
 
         /// <summary>
-        /// Calculates the transform matrix in world coords
+        /// Updates this collision info from object data
+        /// </summary>
+        /// <param name="o"> GameObject to update from </param>
+        public void UpdateDataFromObject(GameObject o)
+        {
+            var controller = o.GetComponent<ObjectController>();
+            var state = controller.nextState;
+            var transform = o.GetComponent<Transform>();
+
+            center = state.position;
+            orientation = state.orientation;
+
+            axis[0] = orientation * Vector3.right;
+            axis[1] = orientation * Vector3.up;
+            axis[2] = orientation * Vector3.forward;
+
+            extents[0] = transform.localScale.x * 0.5f;
+            extents[1] = transform.localScale.y * 0.5f;
+            extents[2] = transform.localScale.z * 0.5f;
+
+            velocity = state.velocity;
+
+            inverseInertiaTensorLocal.SetDiagonal(state.inverseInertiaTensor);
+
+            // Last frame acceleration for collision handling
+            //controller.lastFrameAcceleration = controller.accumulatedLinearForce * controller.nextState.inverseMass;
+
+            _CalculateDerivedData();
+        }
+
+        /// <summary>
+        /// Calculates the transform matrix in wirld coords
         /// </summary>
         /// <param name="transformMatrix"></param>
         /// <param name="position"></param>
         /// <param name="orientation"></param>
-        private void CalculateTransformMatrix(ref Matrix4x4 transformMatrix, Vector3 position, Quaternion orientation)
+        public void CalculateTransformMatrix(ref Matrix4x4 transformMatrix, Vector3 position, Quaternion orientation)
         {
             transformMatrix[0] = 1 - 2 * orientation.y * orientation.y - 2 * orientation.z * orientation.z;
             transformMatrix[1] = 2 * orientation.x * orientation.y - 2 * orientation.w * orientation.z;
@@ -68,7 +85,7 @@ namespace Assets.Scripts.Physics
         /// <param name="iitWorld"></param>
         /// <param name="iitBody"></param>
         /// <param name="rotmat"></param>
-        private void TransformInertiaTensor(ref Matrix3 iitWorld, Matrix3 iitBody, Matrix4x4 rotmat)
+        public void TransformInertiaTensor(ref Matrix3 iitWorld, Matrix3 iitBody, Matrix4x4 rotmat)
         {
             float t4 = rotmat[0] * iitBody[0] + rotmat[1] * iitBody[3] + rotmat[2] * iitBody[6];
             float t9 = rotmat[0] * iitBody[1] + rotmat[1] * iitBody[4] + rotmat[2] * iitBody[7];
@@ -94,43 +111,10 @@ namespace Assets.Scripts.Physics
         /// <summary>
         /// Calculates variables to world coords
         /// </summary>
-        public void CalculateDerivedData()
+        private void _CalculateDerivedData()
         {
-            CalculateTransformMatrix(ref transform, position, orientation);
+            CalculateTransformMatrix(ref transform, center, orientation);
             TransformInertiaTensor(ref inverseInertiaTensorWorld, inverseInertiaTensorLocal, transform);
-        }
-
-        /// <summary>
-        /// Calculates a new velocity from momentum and mass.
-        /// </summary>
-        public void RecalculatePosition()
-        {
-            velocity = momentum * inverseMass;
-        }
-
-        /// <summary>
-        /// Calculates new secondary oriantation variables from angular velocity and inertia tensor.
-        /// </summary>
-        public void RecalculateRotation()
-        {
-            for (int i = 0; i < 3; i++) angularVelocity[i] = angularMomentum[i] * inverseInertiaTensor[i];
-            orientation = AnSimMath.NormalizeQuaternion(orientation);
-            spin = AnSimMath.QuatScale(new Quaternion(angularVelocity.x, angularVelocity.y, angularVelocity.z, 0) * orientation, 0.5f);
-        }
-
-        /// <summary>
-        /// Generates a exact clone of this instance.
-        /// </summary>
-        /// <returns>A replicated state instance</returns>
-        public State Clone()
-        {
-            var clone = new State(position, orientation, mass, inertiaTensor);
-            clone.momentum = momentum;
-            clone.angularMomentum = angularMomentum;
-            clone.RecalculatePosition();
-            clone.RecalculateRotation();
-            clone.CalculateDerivedData();
-            return clone;
         }
     }
 }

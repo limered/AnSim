@@ -8,21 +8,51 @@ namespace Assets.Scripts
     public class AnSimMath
     {
         /// <summary>
-        /// Normalizes a given Quaternion. For small lengths approximates the normalization trough Padé approximant, see http://www.scholarpedia.org/article/Pad%C3%A9_approximant.
+        /// Multiplies two verctor scalar by calar
+        /// </summary>
+        /// <param name="a"></param>
+        /// <param name="b"></param>
+        /// <returns></returns>
+        public static Vector3 VecMultiply(Vector3 a, Vector3 b)
+        {
+            return new Vector3(a.x * b.x, a.y * b.y, a.z * b.z);
+        }
+
+        /// <summary>
+        /// The glorious fast inverse sqrt function by the big master john carmack, see: https://en.wikipedia.org/wiki/Fast_inverse_square_root
+        /// Unsafe, because pointer stuff, it's ok like that.
+        /// </summary>
+        /// <param name="number">Number to be rooted </param>
+        /// <returns></returns>
+        public static unsafe float Fast_Inv_Sqrt(float number)
+        {
+            long i;
+            float x2, y;
+            const float threehalfs = 1.5F;
+
+            x2 = number * 0.5F;
+            y = number;
+            i = *(long*)&y;                             // evil floating point bit level hacking
+            i = 0x5f3759df - (i >> 1);                  // what the fuck?
+            y = *(float*)&i;
+            y = y * (threehalfs - (x2 * y * y));        // 1st iteration
+            y = y * (threehalfs - (x2 * y * y));   // 2nd iteration, this can be removed
+            return y;
+        }
+
+        /// <summary>
+        /// Normalizes a given Quaternion.
         /// </summary>
         /// <param name="q">Quaternion to normalize</param>
         /// <returns></returns>
         public static Quaternion NormalizeQuaternion(Quaternion q)
         {
-            float qmagsq = QuatLengthSq(q);
-            if (Mathf.Abs(1.0f - qmagsq) < 2.107342e-08)
-            {
-                q = QuatScale(q, 2.0f / (1.0f + qmagsq));
-            }
-            else
-            {
-                q = QuatScale(q, 1.0f / Mathf.Sqrt(qmagsq));
-            }
+            float qmagsq = Fast_Inv_Sqrt(QuatLengthSq(q));
+            if (qmagsq <= Quaternion.kEpsilon) return Quaternion.identity;
+            q.x *= qmagsq;
+            q.y *= qmagsq;
+            q.z *= qmagsq;
+            q.w *= qmagsq;
             return q;
         }
 
@@ -46,6 +76,25 @@ namespace Assets.Scripts
         {
             q.Set(q.x * n, q.y * n, q.z * n, q.w * n);
             return q;
+        }
+
+        public static Quaternion QuatRotateByVector(Quaternion q, Vector3 v)
+        {
+            return q * new Quaternion(v.x, v.y, v.z, 0);
+        }
+
+        public static Quaternion QuatAddScaledVector(Quaternion t, Vector3 v, float s)
+        {
+            Quaternion q = new Quaternion(v.x * s, v.y * s, v.z * s, 0);
+            q *= t;
+            return new Quaternion(t.x + q.x * 0.5f, t.y + q.y * 0.5f, t.z + q.z * 0.5f, t.w + q.w * 0.5f);
+        }
+
+        public static Quaternion QuatAddQuat(Quaternion a, Quaternion b)
+        {
+            Quaternion res = Quaternion.identity;
+            for (int i = 0; i < 4; i++) res[i] = a[i] + b[i];
+            return res;
         }
     }
 }
